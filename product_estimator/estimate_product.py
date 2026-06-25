@@ -57,14 +57,17 @@ def estimate_product(image_path: Path, product_description: str, model: str) -> 
             }
         },
     )
+
     result = {}
     result["resposta"] = json.loads(response.output_text)
     result["validacao"] = validation(result["resposta"])
-    result["metricas_logisticas"] = get_metricas_logisticas(
-        Objeto.from_dict(result["resposta"]["produto"]),
-        Objeto.from_dict(result["resposta"]["produto_com_embalagem"]),
-    )
-    result["incertezas"] = get_incertezas(result["resposta"]["produto"], result["resposta"]["produto_com_embalagem"])
+
+    if result["validacao"]["status"]:
+        produto = Objeto.from_dict(result["resposta"]["produto"])
+        result["metricas_logisticas"] = get_metricas_logisticas(produto)
+        result["incertezas"] = get_incertezas(result["resposta"]["produto"])
+    else:
+        result["metricas_logisticas"] = {}
+        result["incertezas"] = {}
 
     return result
-

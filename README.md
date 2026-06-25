@@ -3,16 +3,21 @@
 Projeto Python para estimar dimensões e peso de produtos a partir de uma imagem
 e uma descrição textual, usando a OpenAI Responses API.
 
-O modelo retorna um JSON estruturado com:
+A imagem deve representar o item que será medido. Quando o produto estiver na
+embalagem, as estimativas consideram o conjunto embalado exatamente como aparece
+na foto.
+
+O sistema retorna um JSON estruturado com:
 
 - identificação provável do produto;
 - descrição resumida do que foi observado;
-- `produto`, contendo dimensões estimadas em centímetros e peso estimado em quilogramas;
-- `produto_com_embalagem`, contendo dimensões estimadas da embalagem e peso bruto estimado;
+- `produto`, contendo dimensões estimadas em centímetros e peso estimado em quilogramas do item fotografado;
 - nível de confiança;
 - pistas usadas na estimativa;
 - fatores de incerteza;
-- `validacao`, adicionada no pós-processamento, com `status`, `erros` e `alertas`.
+- `validacao`, adicionada no pós-processamento, com `status`, `erros` e `alertas`;
+- `metricas_logisticas`, calculadas localmente a partir da estimativa;
+- `incertezas`, calculadas a partir das faixas estimadas pelo modelo.
 
 ## Instalação
 
@@ -32,13 +37,13 @@ export OPENAI_MODEL="gpt-5.5"
 ## Uso
 
 ```bash
-python cli.py ./imagem.jpg "Suporte articulado de monitor em metal preto"
+python cli.py ./imagem.jpg "Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada"
 ```
 
 Para salvar o JSON em arquivo:
 
 ```bash
-python cli.py ./imagem.jpg "Suporte articulado de monitor em metal preto" --output resultado.json
+python cli.py ./imagem.jpg "Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada" --output resultado.json
 ```
 
 Para informar outro modelo na execução:
@@ -53,6 +58,7 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.2
 .
 ├── cli.py
 ├── product_estimator/
+│   ├── constants.py
 │   ├── estimate_product.py
 │   ├── post_processing.py
 │   ├── prompt.py
@@ -66,7 +72,9 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.2
 `product_estimator/estimate_product.py` contém a integração com a OpenAI e pode
 ser reaproveitado por uma API web.
 
-`product_estimator/post_processing.py` adiciona a chave `validacao` e verifica a estrutura e a coerência logística da resposta.
+`product_estimator/constants.py` guarda constantes operacionais, como o fator de cubagem.
+
+`product_estimator/post_processing.py` adiciona validação, métricas logísticas e incertezas à resposta.
 
 `product_estimator/prompt.py` guarda o prompt de sistema.
 

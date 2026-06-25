@@ -11,7 +11,6 @@ MEASUREMENT_SCHEMA: dict[str, Any] = {
             "produto_identificado",
             "descricao_resumida",
             "produto",
-            "produto_com_embalagem",
             "nivel_confianca",
             "principais_pistas_usadas",
             "fatores_de_incerteza",
@@ -21,7 +20,6 @@ MEASUREMENT_SCHEMA: dict[str, Any] = {
             "produto_identificado": {"type": "string"},
             "descricao_resumida": {"type": "string"},
             "produto": {"$ref": "#/$defs/medidas_e_peso"},
-            "produto_com_embalagem": {"$ref": "#/$defs/medidas_e_peso"},
             "nivel_confianca": {"type": "string", "enum": ["baixo", "medio", "alto"]},
             "principais_pistas_usadas": {
                 "type": "array",
