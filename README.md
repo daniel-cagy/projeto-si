@@ -84,6 +84,7 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.2
 ├── product_estimator/
 │   ├── constants.py
 │   ├── estimate_product.py
+│   ├── image_processing.py
 │   ├── post_processing.py
 │   ├── prompt.py
 │   └── schema.py
@@ -103,6 +104,8 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.2
 
 `product_estimator/estimate_product.py` contém a integração com a OpenAI e pode
 ser reaproveitado por uma API web.
+
+`product_estimator/image_processing.py` redimensiona e comprime a imagem antes da chamada ao modelo.
 
 `product_estimator/constants.py` guarda constantes operacionais, como o fator de cubagem.
 
