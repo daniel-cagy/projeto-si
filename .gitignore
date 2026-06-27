@@ -44,3 +44,9 @@ Thumbs.db
 resultado.json
 output.json
 outputs/
+
+# Ignore test images and results, but keep .gitkeep files
+tests/images/*
+!tests/images/.gitkeep
+tests/results/*
+!tests/results/.gitkeep
