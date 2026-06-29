@@ -24,6 +24,7 @@ pós-processamento local. Os principais campos são:
 - `resposta.nivel_confianca`: confiança binária, `alto` ou `baixo`;
 - `validacao`: status, erros e alertas detectados localmente;
 - `metricas_logisticas`: volume, densidade, peso cubado, peso cobrável e fator de cubagem usado;
+- `correcoes_usuario` e `produto_ajustado`: valores manuais informados após o resultado, quando houver;
 - `medidas_conhecidas_informadas`: medidas passadas pelo usuário, quando houver;
 - `modo_processamento_imagem`: `original`, `resized` ou `quantized`;
 - `modelo_utilizado`: modelo enviado para a OpenAI;
@@ -74,6 +75,7 @@ A interface permite:
 - escolher o modelo de IA por preset ou texto livre;
 - escolher o fator de cubagem usado no cálculo do peso cubado;
 - escolher o tratamento da imagem: original, redimensionada ou quantizada;
+- corrigir medidas no resultado sem chamar o modelo novamente;
 - exportar o resultado em JSON ou CSV.
 
 ### API

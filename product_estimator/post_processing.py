@@ -156,3 +156,31 @@ def get_metricas_logisticas(produto: Objeto, fator_cubagem: int | float = FATOR_
     metricas["peso_cobravel_estimado_kg"] = max(produto.w, peso_cubado)
     metricas["fator_cubagem"] = fator_cubagem
     return metricas
+
+
+def get_produto_ajustado(output: dict, corrections: dict[str, float]) -> dict:
+    produto = output["produto"]
+    dimensoes = produto["dimensoes_estimadas_cm"]
+
+    return {
+        "dimensoes_cm": {
+            "comprimento": corrections.get("comprimento", dimensoes["comprimento"]["estimativa"]),
+            "largura": corrections.get("largura", dimensoes["largura"]["estimativa"]),
+            "altura": corrections.get("altura", dimensoes["altura"]["estimativa"]),
+        },
+        "peso_kg": corrections.get("peso", produto["peso_estimado_kg"]["estimativa"]),
+        "campos_corrigidos": sorted(corrections.keys()),
+    }
+
+
+def get_objeto_ajustado(output: dict, corrections: dict[str, float]) -> Objeto:
+    produto_ajustado = get_produto_ajustado(output, corrections)
+    dimensoes = produto_ajustado["dimensoes_cm"]
+
+    return Objeto(
+        x=dimensoes["comprimento"],
+        y=dimensoes["largura"],
+        z=dimensoes["altura"],
+        w=produto_ajustado["peso_kg"],
+    )
+

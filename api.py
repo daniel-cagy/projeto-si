@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import math
 import os
@@ -7,18 +8,20 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from product_estimator.constants import FATOR_CUBAGEM
 from product_estimator.estimate_product import estimate_product
 from product_estimator.image_processing import DEFAULT_IMAGE_PROCESSING_MODE, IMAGE_PROCESSING_MODES
+from product_estimator.post_processing import get_metricas_logisticas, get_objeto_ajustado, get_produto_ajustado, validation
 
 
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 KNOWN_MEASURE_TYPES = {"comprimento", "largura", "altura", "peso"}
+MANUAL_CORRECTION_TYPES = KNOWN_MEASURE_TYPES
 
 
 def parse_cubage_factor(raw_cubage_factor: str) -> float:
@@ -37,6 +40,49 @@ def parse_cubage_factor(raw_cubage_factor: str) -> float:
         )
 
     return cubage_factor
+
+
+def parse_manual_corrections(raw_corrections: object) -> dict[str, float]:
+    if raw_corrections is None:
+        return {}
+
+    if not isinstance(raw_corrections, dict):
+        raise HTTPException(
+            status_code=400,
+            detail="As correções manuais precisam ser enviadas como um objeto.",
+        )
+
+    corrections: dict[str, float] = {}
+    for correction_type, correction_value in raw_corrections.items():
+        if correction_type not in MANUAL_CORRECTION_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail="Tipo de correção manual inválido.",
+            )
+
+        if isinstance(correction_value, bool) or not isinstance(correction_value, (int, float)):
+            raise HTTPException(
+                status_code=400,
+                detail="Valor de correção manual inválido.",
+            )
+
+        if not math.isfinite(correction_value) or correction_value <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Correções manuais precisam ser números finitos maiores que zero.",
+            )
+
+        corrections[correction_type] = float(correction_value)
+
+    return corrections
+
+
+def get_payload_cubage_factor(payload: dict[str, Any]) -> float:
+    raw_factor = payload.get("fator_cubagem_utilizado")
+    if raw_factor is None:
+        raw_factor = payload.get("metricas_logisticas", {}).get("fator_cubagem", FATOR_CUBAGEM)
+
+    return parse_cubage_factor(str(raw_factor))
 
 
 def parse_known_measures(raw_known_measures: str) -> dict[str, float]:
@@ -108,6 +154,36 @@ def home() -> FileResponse:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/recalculate")
+def recalculate(request: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    payload = request.get("payload")
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Payload original inválido.")
+
+    resposta = payload.get("resposta")
+    if not isinstance(resposta, dict):
+        raise HTTPException(status_code=400, detail="Payload sem resposta válida para recalcular.")
+
+    corrections = parse_manual_corrections(request.get("correcoes_usuario", {}))
+    validation_result = validation(resposta, payload.get("medidas_conhecidas_informadas"))
+    if not validation_result["status"]:
+        raise HTTPException(status_code=400, detail="Payload original não passou na validação.")
+
+    cubage_factor = get_payload_cubage_factor(payload)
+    adjusted_object = get_objeto_ajustado(resposta, corrections)
+    adjusted_product = get_produto_ajustado(resposta, corrections)
+
+    recalculated_payload = copy.deepcopy(payload)
+    if "metricas_logisticas_originais" not in recalculated_payload:
+        recalculated_payload["metricas_logisticas_originais"] = payload.get("metricas_logisticas", {})
+
+    recalculated_payload["correcoes_usuario"] = corrections
+    recalculated_payload["produto_ajustado"] = adjusted_product
+    recalculated_payload["metricas_logisticas"] = get_metricas_logisticas(adjusted_object, cubage_factor)
+    recalculated_payload["recalculado_localmente"] = True
+    return recalculated_payload
 
 
 @app.post("/estimate")

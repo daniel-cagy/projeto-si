@@ -52,6 +52,9 @@ function buildCsv(payload) {
   const produto = resposta.produto || {};
   const dimensoes = produto.dimensoes_estimadas_cm || {};
   const metricas = payload.metricas_logisticas || {};
+  const corrections = payload.correcoes_usuario || {};
+  const adjustedProduct = payload.produto_ajustado || {};
+  const adjustedDimensions = adjustedProduct.dimensoes_cm || {};
   const validacao = payload.validacao || {};
   const knownMeasures = payload.medidas_conhecidas_informadas || {};
   const data = {
@@ -75,6 +78,15 @@ function buildCsv(payload) {
   data.peso_cubado_kg = metricas.peso_cubado_kg ?? '';
   data.peso_cobravel_estimado_kg = metricas.peso_cobravel_estimado_kg ?? '';
   data.fator_cubagem = metricas.fator_cubagem ?? '';
+  data.correcao_comprimento_cm = corrections.comprimento ?? '';
+  data.correcao_largura_cm = corrections.largura ?? '';
+  data.correcao_altura_cm = corrections.altura ?? '';
+  data.correcao_peso_kg = corrections.peso ?? '';
+  data.comprimento_ajustado_cm = adjustedDimensions.comprimento ?? '';
+  data.largura_ajustada_cm = adjustedDimensions.largura ?? '';
+  data.altura_ajustada_cm = adjustedDimensions.altura ?? '';
+  data.peso_ajustado_kg = adjustedProduct.peso_kg ?? '';
+  data.recalculado_localmente = payload.recalculado_localmente ?? '';
   data.validacao_status = validacao.status ?? '';
   data.validacao_erros = (validacao.erros || []).join(' | ');
   data.validacao_alertas = (validacao.alertas || []).join(' | ');

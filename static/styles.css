@@ -699,6 +699,45 @@
       overflow-wrap: anywhere;
     }
 
+    .metric-value small {
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 800;
+      margin-left: 4px;
+      text-transform: uppercase;
+    }
+
+    .editable-metric {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .adjust-measure-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--green-dark);
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, color .2s;
+    }
+
+    .adjust-measure-btn:hover {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+    }
+
+    .manual-corrections-summary span {
+      color: var(--text);
+      border-color: var(--green);
+    }
+
     .confidence {
       display: inline-flex;
       width: fit-content;
@@ -1066,4 +1105,86 @@
   .export-btn {
     width: 100%;
   }
+}
+
+
+.measure-edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(17, 24, 39, .42);
+}
+
+.measure-edit-modal {
+  width: min(420px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.measure-edit-title {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.measure-edit-field {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.measure-edit-field input {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 750;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.measure-edit-field input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0,168,104,.12);
+}
+
+.measure-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.measure-edit-actions button {
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.measure-edit-cancel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.measure-edit-submit {
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #fff;
 }
