@@ -15,6 +15,33 @@ from openai import OpenAI
 
 
 
+def parse_response_json(response: Any) -> dict[str, Any]:
+    raw_output = getattr(response, "output_text", "") or ""
+    response_id = getattr(response, "id", None)
+    response_status = getattr(response, "status", None)
+    incomplete_details = getattr(response, "incomplete_details", None)
+
+    if not raw_output.strip():
+        raise ValueError(
+            "Resposta vazia da OpenAI. "
+            f"response_id={response_id}; "
+            f"status={response_status}; "
+            f"incomplete_details={incomplete_details}"
+        )
+
+    try:
+        return json.loads(raw_output)
+    except json.JSONDecodeError as exc:
+        output_preview = raw_output[:500].replace("\n", " ")
+        raise ValueError(
+            "Resposta da OpenAI não veio como JSON válido. "
+            f"response_id={response_id}; "
+            f"status={response_status}; "
+            f"incomplete_details={incomplete_details}; "
+            f"output_preview={output_preview!r}"
+        ) from exc
+
+
 def format_known_measures(known_measures: dict[str, float] | None) -> str:
     if not known_measures:
         return ""
@@ -79,7 +106,9 @@ def estimate_product(
     )
 
     result = {}
-    result["resposta"] = json.loads(response.output_text)
+    result["resposta"] = parse_response_json(response)
+    result["openai_response_id"] = getattr(response, "id", None)
+    result["openai_response_status"] = getattr(response, "status", None)
     result["medidas_conhecidas_informadas"] = known_measures or {}
     result["modo_processamento_imagem"] = image_processing_mode
     result["validacao"] = validation(result["resposta"], known_measures)
@@ -90,13 +119,14 @@ def estimate_product(
     else:
         result["metricas_logisticas"] = {}
 
-    if result.usage:
+    usage = getattr(response, "usage", None)
+    if usage:
         result["uso_de_tokens"] = {
-            "input": result.usage.input_tokens,
-            "output": result.usage.output_tokens,
-            "total": result.usage.total_tokens,
+            "input_tokens": usage.input_tokens,
+            "output_tokens": usage.output_tokens,
+            "total_tokens": usage.total_tokens,
         }
     else:
         result["uso_de_tokens"] = {}
-    
+
     return result
