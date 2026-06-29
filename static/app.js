@@ -174,12 +174,12 @@ form.addEventListener('submit', async e => {
   e.preventDefault();
   if (submitBtn.disabled) return;
 
-  const file = fileInput.files[0];
-  if (!file) return;
+  const files = Array.from(fileInput.files);
+  if (!files.length) return;
 
   const formData = new FormData();
   const knownMeasures = collectKnownMeasures();
-  formData.append('image', file);
+  files.forEach(file => formData.append('images', file));
   formData.append('description', description.value.trim());
   formData.append('known_measures', JSON.stringify(knownMeasures));
   formData.append('image_processing_mode', getImageProcessingMode());

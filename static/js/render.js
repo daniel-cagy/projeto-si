@@ -122,6 +122,7 @@ export function renderResult(payload) {
         ${metric('Peso cubado', `${formatNumber(metricas.peso_cubado_kg, 2)} kg`)}
         ${metric('Peso cobrável', `${formatNumber(metricas.peso_cobravel_estimado_kg, 2)} kg`)}
         ${metric('Fator de cubagem', formatNumber(metricas.fator_cubagem, 0))}
+        ${metric('Imagens usadas', String(payload.quantidade_imagens || 1))}
       </div>
       ${validationItems ? `<ul class="validation-list">${validationItems}</ul>` : ''}
     </div>

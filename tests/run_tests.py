@@ -52,6 +52,8 @@ FIELDNAMES = [
     "sample_id",
     "sample_file",
     "image_file",
+    "image_files",
+    "image_count",
     "model",
     "image_processing_mode",
     "repetition",
@@ -85,6 +87,9 @@ FIELDNAMES = [
     "final_height",
     "original_bytes",
     "final_bytes",
+    "total_original_bytes",
+    "total_final_bytes",
+    "total_byte_reduction_percent",
     "original_megapixels",
     "final_megapixels",
     "byte_reduction_percent",
@@ -167,6 +172,13 @@ def parse_args() -> argparse.Namespace:
         help="Modos de processamento de imagem a testar.",
     )
     parser.add_argument(
+        "--image-counts",
+        nargs="+",
+        type=int,
+        default=[1],
+        help="Quantidades de imagens por chamada. Ex: --image-counts 1 2 3.",
+    )
+    parser.add_argument(
         "--samples",
         nargs="+",
         default=None,
@@ -225,10 +237,19 @@ def load_samples(samples_dir: Path, selected_samples: list[str] | None) -> list[
 
 
 def validate_sample(sample_path: Path, data: dict[str, Any]) -> None:
-    required_keys = {"imagem", "descricao", "resultado_esperado"}
+    required_keys = {"descricao", "resultado_esperado"}
     missing_keys = required_keys - data.keys()
     if missing_keys:
         raise ValueError(f"{sample_path} faltando chaves: {', '.join(sorted(missing_keys))}")
+
+    if "imagem" not in data and "imagens" not in data:
+        raise ValueError(f"{sample_path} precisa ter 'imagem' ou 'imagens'.")
+
+    if "imagens" in data:
+        if not isinstance(data["imagens"], list) or not data["imagens"]:
+            raise ValueError(f"{sample_path}: 'imagens' deve ser uma lista não vazia.")
+        if not all(isinstance(image_name, str) for image_name in data["imagens"]):
+            raise ValueError(f"{sample_path}: todos os itens de 'imagens' devem ser strings.")
 
     expected = data["resultado_esperado"]
     if not isinstance(expected, dict):
@@ -248,7 +269,28 @@ def resolve_image_path(images_dir: Path, image_name: str) -> Path:
     return images_dir / image_path
 
 
-def get_image_metadata(image_path: Path, processing_mode: str) -> dict[str, Any]:
+def get_sample_image_names(sample: dict[str, Any]) -> list[str]:
+    if "imagens" in sample:
+        return sample["imagens"]
+    return [sample["imagem"]]
+
+
+def resolve_sample_image_paths(
+    images_dir: Path,
+    sample: dict[str, Any],
+    image_count: int,
+) -> list[Path]:
+    image_names = get_sample_image_names(sample)
+    if image_count > len(image_names):
+        raise ValueError(
+            f"Sample {sample['id']} tem {len(image_names)} imagem(ns), "
+            f"mas o teste pediu {image_count}."
+        )
+
+    return [resolve_image_path(images_dir, image_name) for image_name in image_names[:image_count]]
+
+
+def get_single_image_metadata(image_path: Path, processing_mode: str) -> dict[str, Any]:
     started_at = time.perf_counter()
     original_bytes = image_path.read_bytes()
 
@@ -284,6 +326,29 @@ def get_image_metadata(image_path: Path, processing_mode: str) -> dict[str, Any]
         "final_image_mode": final_image_mode,
         "final_color_count": len(colors) if colors else "",
     }
+
+
+def get_image_metadata(image_paths: list[Path], processing_mode: str) -> dict[str, Any]:
+    metadata_by_image = [
+        get_single_image_metadata(image_path, processing_mode)
+        for image_path in image_paths
+    ]
+    metadata = dict(metadata_by_image[0])
+    total_original_bytes = sum(item["original_bytes"] for item in metadata_by_image)
+    total_final_bytes = sum(item["final_bytes"] for item in metadata_by_image)
+
+    metadata.update({
+        "image_preprocessing_seconds": sum(
+            item["image_preprocessing_seconds"] for item in metadata_by_image
+        ),
+        "total_original_bytes": total_original_bytes,
+        "total_final_bytes": total_final_bytes,
+        "total_byte_reduction_percent": calculate_reduction_percent(
+            total_original_bytes,
+            total_final_bytes,
+        ),
+    })
+    return metadata
 
 
 def calculate_reduction_percent(original_size: int, final_size: int) -> float | str:
@@ -400,7 +465,7 @@ def serialize_list(items: list[Any]) -> str:
 def build_success_row(
     *,
     sample: dict[str, Any],
-    image_path: Path,
+    image_paths: list[Path],
     model: str,
     processing_mode: str,
     repetition: int,
@@ -419,7 +484,7 @@ def build_success_row(
 
     row = build_base_row(
         sample=sample,
-        image_path=image_path,
+        image_paths=image_paths,
         model=model,
         processing_mode=processing_mode,
         repetition=repetition,
@@ -515,7 +580,7 @@ def build_success_row(
 def build_error_row(
     *,
     sample: dict[str, Any],
-    image_path: Path,
+    image_paths: list[Path],
     model: str,
     processing_mode: str,
     repetition: int,
@@ -525,7 +590,7 @@ def build_error_row(
 ) -> dict[str, Any]:
     row = build_base_row(
         sample=sample,
-        image_path=image_path,
+        image_paths=image_paths,
         model=model,
         processing_mode=processing_mode,
         repetition=repetition,
@@ -543,7 +608,7 @@ def build_error_row(
 def build_base_row(
     *,
     sample: dict[str, Any],
-    image_path: Path,
+    image_paths: list[Path],
     model: str,
     processing_mode: str,
     repetition: int,
@@ -554,7 +619,9 @@ def build_base_row(
         "executed_at": datetime.now().isoformat(timespec="seconds"),
         "sample_id": sample["id"],
         "sample_file": sample["sample_file"],
-        "image_file": str(image_path),
+        "image_file": str(image_paths[0]) if image_paths else "",
+        "image_files": serialize_list(image_paths),
+        "image_count": len(image_paths),
         "model": model,
         "image_processing_mode": processing_mode,
         "repetition": repetition,
@@ -567,12 +634,14 @@ def run_evaluation(args: argparse.Namespace) -> Path:
     samples = load_samples(args.samples_dir, args.samples)
     models = args.models or MODELS
     processing_modes = args.processing_modes
+    image_counts = args.image_counts
     output_path = resolve_output_path(args)
 
-    total_runs = len(samples) * len(models) * len(processing_modes) * args.repetitions
+    total_runs = len(samples) * len(models) * len(processing_modes) * len(image_counts) * args.repetitions
     print(f"Samples: {len(samples)}")
     print(f"Modelos: {len(models)}")
     print(f"Modos de imagem: {len(processing_modes)}")
+    print(f"Quantidades de imagens: {', '.join(str(count) for count in image_counts)}")
     print(f"Repetições: {args.repetitions}")
     print(f"Total de chamadas planejadas: {total_runs}")
 
@@ -588,64 +657,68 @@ def run_evaluation(args: argparse.Namespace) -> Path:
 
         run_number = 0
         for sample in samples:
-            image_path = resolve_image_path(args.images_dir, sample["imagem"])
+            for image_count in image_counts:
+                image_paths = resolve_sample_image_paths(args.images_dir, sample, image_count)
 
-            for model in models:
-                for processing_mode in processing_modes:
-                    for repetition in range(1, args.repetitions + 1):
-                        run_number += 1
-                        print(
-                            f"[{run_number}/{total_runs}] "
-                            f"{sample['id']} | {model} | {processing_mode} | repetição {repetition}"
-                        )
-
-                        image_metadata = None
-                        started_at = time.perf_counter()
-                        try:
-                            if not image_path.exists():
-                                raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
-
-                            image_metadata = get_image_metadata(image_path, processing_mode)
-                            result = estimate_product(
-                                image_path=image_path,
-                                product_description=sample["descricao"],
-                                model=model,
-                                known_measures=sample.get("medidas_conhecidas"),
-                                image_processing_mode=processing_mode,
+                for model in models:
+                    for processing_mode in processing_modes:
+                        for repetition in range(1, args.repetitions + 1):
+                            run_number += 1
+                            print(
+                                f"[{run_number}/{total_runs}] "
+                                f"{sample['id']} | {image_count} imagem(ns) | "
+                                f"{model} | {processing_mode} | repetição {repetition}"
                             )
-                            duration_seconds = time.perf_counter() - started_at
-                            row = build_success_row(
-                                sample=sample,
-                                image_path=image_path,
-                                model=model,
-                                processing_mode=processing_mode,
-                                repetition=repetition,
-                                duration_seconds=duration_seconds,
-                                image_metadata=image_metadata,
-                                result=result,
-                                input_price=args.input_price_per_1m,
-                                output_price=args.output_price_per_1m,
-                            )
-                        except Exception as error:
-                            duration_seconds = time.perf_counter() - started_at
-                            row = build_error_row(
-                                sample=sample,
-                                image_path=image_path,
-                                model=model,
-                                processing_mode=processing_mode,
-                                repetition=repetition,
-                                image_metadata=image_metadata,
-                                error=error,
-                                duration_seconds=duration_seconds,
-                            )
-                            print(f"Erro: {type(error).__name__}: {error}")
-                            if args.stop_on_error:
-                                writer.writerow(row)
-                                csv_file.flush()
-                                raise
 
-                        writer.writerow(row)
-                        csv_file.flush()
+                            image_metadata = None
+                            started_at = time.perf_counter()
+                            try:
+                                for image_path in image_paths:
+                                    if not image_path.exists():
+                                        raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
+
+                                image_metadata = get_image_metadata(image_paths, processing_mode)
+                                result = estimate_product(
+                                    image_path=image_paths[0],
+                                    image_paths=image_paths,
+                                    product_description=sample["descricao"],
+                                    model=model,
+                                    known_measures=sample.get("medidas_conhecidas"),
+                                    image_processing_mode=processing_mode,
+                                )
+                                duration_seconds = time.perf_counter() - started_at
+                                row = build_success_row(
+                                    sample=sample,
+                                    image_paths=image_paths,
+                                    model=model,
+                                    processing_mode=processing_mode,
+                                    repetition=repetition,
+                                    duration_seconds=duration_seconds,
+                                    image_metadata=image_metadata,
+                                    result=result,
+                                    input_price=args.input_price_per_1m,
+                                    output_price=args.output_price_per_1m,
+                                )
+                            except Exception as error:
+                                duration_seconds = time.perf_counter() - started_at
+                                row = build_error_row(
+                                    sample=sample,
+                                    image_paths=image_paths,
+                                    model=model,
+                                    processing_mode=processing_mode,
+                                    repetition=repetition,
+                                    image_metadata=image_metadata,
+                                    error=error,
+                                    duration_seconds=duration_seconds,
+                                )
+                                print(f"Erro: {type(error).__name__}: {error}")
+                                if args.stop_on_error:
+                                    writer.writerow(row)
+                                    csv_file.flush()
+                                    raise
+
+                            writer.writerow(row)
+                            csv_file.flush()
 
     print(f"CSV gerado em: {output_path}")
     return output_path
@@ -655,6 +728,8 @@ def main() -> None:
     args = parse_args()
     if args.repetitions < 1:
         raise ValueError("--repetitions deve ser maior ou igual a 1.")
+    if any(image_count < 1 for image_count in args.image_counts):
+        raise ValueError("--image-counts deve conter apenas valores maiores ou iguais a 1.")
     run_evaluation(args)
 
 

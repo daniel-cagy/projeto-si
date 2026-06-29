@@ -62,6 +62,8 @@ function buildCsv(payload) {
     descricao_resumida: resposta.descricao_resumida || '',
     nivel_confianca: resposta.nivel_confianca || '',
     modo_processamento_imagem: payload.modo_processamento_imagem || '',
+    quantidade_imagens: payload.quantidade_imagens || 1,
+    multiplas_imagens_utilizadas: payload.multiplas_imagens_utilizadas || false,
   };
 
   addRangeFields(data, 'comprimento_cm', dimensoes.comprimento);

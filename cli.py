@@ -18,6 +18,13 @@ def parse_args() -> argparse.Namespace:
         help="Descrição textual do produto. Use aspas se tiver espaços.",
     )
     parser.add_argument(
+        "--extra-image",
+        action="append",
+        type=Path,
+        default=[],
+        help="Imagem adicional do mesmo produto. Pode ser usado mais de uma vez.",
+    )
+    parser.add_argument(
         "--model",
         default=os.getenv("OPENAI_MODEL", "gpt-5.5"),
         help="Modelo da OpenAI. Padrão: OPENAI_MODEL ou gpt-5.5.",
@@ -32,8 +39,10 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
+    image_paths = [args.image, *args.extra_image]
     result = estimate_product(
         image_path=args.image,
+        image_paths=image_paths,
         product_description=args.description,
         model=args.model,
     )

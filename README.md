@@ -88,7 +88,8 @@ POST /estimate
 
 Ele recebe `multipart/form-data` com:
 
-- `image`: arquivo de imagem;
+- `image`: arquivo de imagem, mantido por compatibilidade;
+- `images`: uma ou mais imagens do mesmo produto, até 3 arquivos;
 - `description`: descrição textual do produto;
 - `known_measures`: JSON com medidas conhecidas, opcional;
 - `image_processing_mode`: `original`, `resized` ou `quantized`;
@@ -111,6 +112,12 @@ Para informar outro modelo na execução:
 
 ```bash
 python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.4-mini
+```
+
+Para enviar imagens adicionais do mesmo produto pela CLI:
+
+```bash
+python cli.py ./frente.jpg "Produto de exemplo" --extra-image ./lateral.jpg --extra-image ./topo.jpg
 ```
 
 ## Estrutura Do Projeto
@@ -163,7 +170,7 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.4-mini
 
 `static/js/dom.js` centraliza referências aos elementos do DOM.
 
-`static/js/upload.js` controla upload, preview e remoção de imagem.
+`static/js/upload.js` controla upload, preview e remoção de uma ou mais imagens.
 
 `static/js/knownMeasures.js` controla a adição de medidas conhecidas.
 
@@ -175,7 +182,7 @@ python cli.py ./imagem.jpg "Produto de exemplo" --model gpt-5.4-mini
 
 `static/js/format.js` concentra funções pequenas de formatação e escape de HTML.
 
-`product_estimator/estimate_product.py` contém a integração com a OpenAI Responses API e monta a resposta final usada pela CLI e pela API.
+`product_estimator/estimate_product.py` contém a integração com a OpenAI Responses API, monta a mensagem com uma ou mais imagens e gera a resposta final usada pela CLI e pela API.
 
 `product_estimator/image_processing.py` prepara a imagem antes do envio ao modelo. Os modos disponíveis são:
 

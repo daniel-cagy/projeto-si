@@ -54,9 +54,9 @@
 
         <!-- Upload -->
         <div class="field">
-          <label>Foto do produto <span>*</span></label>
+          <label>Fotos do produto <span>*</span></label>
           <div class="dropzone" id="dropzone">
-            <input type="file" id="file-input" accept="image/*" />
+            <input type="file" id="file-input" accept="image/*" multiple />
             <div class="dropzone-icon">
               <svg width="22" height="22" fill="none" stroke="#6B7A8D" stroke-width="1.8" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="18" height="18" rx="3"/>
@@ -64,13 +64,13 @@
                 <path d="M21 15l-5-5L5 21"/>
               </svg>
             </div>
-            <p><strong>Clique para selecionar</strong> ou arraste a imagem aqui</p>
-            <small>PNG, JPG, WEBP — máx. 10 MB</small>
+            <p><strong>Clique para selecionar</strong> ou arraste as imagens aqui</p>
+            <small>PNG, JPG, WEBP — até 3 imagens, máx. 10 MB por imagem</small>
           </div>
 
           <div id="preview-wrap">
-            <img id="preview-img" src="" alt="Preview do produto" />
-            <button type="button" class="remove-btn" id="remove-btn">✕ Remover</button>
+            <div id="preview-list"></div>
+            <button type="button" class="remove-btn" id="remove-btn">✕ Remover imagens</button>
           </div>
         </div>
 

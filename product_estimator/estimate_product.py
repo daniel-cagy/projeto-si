@@ -63,17 +63,68 @@ def format_known_measures(known_measures: dict[str, float] | None) -> str:
     )
 
 
+def normalize_image_paths(image_path: Path | None, image_paths: list[Path] | None) -> list[Path]:
+    paths = image_paths if image_paths is not None else [image_path]
+    valid_paths = [path for path in paths if path is not None]
+
+    if not valid_paths:
+        raise ValueError("Ao menos uma imagem precisa ser informada.")
+
+    return valid_paths
+
+
+def get_image_instruction(image_count: int) -> str:
+    if image_count == 1:
+        return "Analise também a imagem anexada."
+
+    return (
+        "Analise também as imagens anexadas. "
+        "Todas mostram o mesmo produto por ângulos diferentes. "
+        "Use as imagens adicionais para melhorar a estimativa de proporções, "
+        "especialmente altura, profundidade e partes parcialmente ocultas."
+    )
+
+
+def build_user_content(
+    product_description: str,
+    known_measures_text: str,
+    image_paths: list[Path],
+    image_processing_mode: str,
+) -> list[dict[str, Any]]:
+    content = [
+        {
+            "type": "input_text",
+            "text": (
+                "Descrição textual do produto:\n"
+                f"{product_description}\n\n"
+                f"{known_measures_text}\n\n"
+                f"{get_image_instruction(len(image_paths))}"
+            ),
+        }
+    ]
+
+    for image_path in image_paths:
+        content.append({
+            "type": "input_image",
+            "image_url": image_to_data_url(image_path, image_processing_mode),
+        })
+
+    return content
+
+
 
 def estimate_product(
-    image_path: Path,
+    image_path: Path | None,
     product_description: str,
     model: str,
     known_measures: dict[str, float] | None = None,
     image_processing_mode: str = DEFAULT_IMAGE_PROCESSING_MODE,
     cubage_factor: float = FATOR_CUBAGEM,
+    image_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     client = OpenAI()
     known_measures_text = format_known_measures(known_measures)
+    normalized_image_paths = normalize_image_paths(image_path, image_paths)
 
     response = client.responses.create(
         model=model,
@@ -81,21 +132,12 @@ def estimate_product(
         input=[
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": (
-                            "Descrição textual do produto:\n"
-                            f"{product_description}\n\n"
-                            f"{known_measures_text}\n\n"
-                            "Analise também a imagem anexada."
-                        ),
-                    },
-                    {
-                        "type": "input_image",
-                        "image_url": image_to_data_url(image_path, image_processing_mode),
-                    },
-                ],
+                "content": build_user_content(
+                    product_description=product_description,
+                    known_measures_text=known_measures_text,
+                    image_paths=normalized_image_paths,
+                    image_processing_mode=image_processing_mode,
+                ),
             }
         ],
         text={
@@ -114,6 +156,8 @@ def estimate_product(
     result["fator_cubagem_utilizado"] = cubage_factor
     result["medidas_conhecidas_informadas"] = known_measures or {}
     result["modo_processamento_imagem"] = image_processing_mode
+    result["quantidade_imagens"] = len(normalized_image_paths)
+    result["multiplas_imagens_utilizadas"] = len(normalized_image_paths) > 1
     result["validacao"] = validation(result["resposta"], known_measures)
 
     if result["validacao"]["status"]:

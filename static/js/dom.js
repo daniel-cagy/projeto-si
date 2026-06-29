@@ -1,7 +1,7 @@
 export const dropzone = document.getElementById('dropzone');
 export const fileInput = document.getElementById('file-input');
 export const previewWrap = document.getElementById('preview-wrap');
-export const previewImg = document.getElementById('preview-img');
+export const previewList = document.getElementById('preview-list');
 export const removeBtn = document.getElementById('remove-btn');
 export const description = document.getElementById('description');
 export const charNum = document.getElementById('char-num');

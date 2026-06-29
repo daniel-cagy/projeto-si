@@ -42,6 +42,27 @@ As unidades esperadas são:
 
 A imagem pode ser indicada por caminho relativo a `tests/images/` ou por caminho absoluto. O campo `descricao` é enviado ao modelo junto com a imagem. O campo `resultado_esperado` é usado apenas na avaliação.
 
+Para avaliar mais de uma foto do mesmo produto, use `imagens` no lugar de `imagem`:
+
+```json
+{
+  "imagens": [
+    "produto_frente.jpg",
+    "produto_lateral.jpg",
+    "produto_topo.jpg"
+  ],
+  "descricao": "Descrição textual usada no teste",
+  "resultado_esperado": {
+    "comprimento": 10,
+    "largura": 5,
+    "altura": 2,
+    "peso": 0.1
+  }
+}
+```
+
+A ordem importa: o runner usa as primeiras imagens da lista conforme a quantidade pedida em `--image-counts`.
+
 Um sample também pode incluir `medidas_conhecidas`, caso a avaliação queira simular o usuário informando uma medida real:
 
 ```json
@@ -59,21 +80,30 @@ Para cada sample, o runner executa todas as combinações de:
 
 - modelo em `MODELS`;
 - modo de imagem em `IMAGE_PROCESSING_MODES`;
+- quantidade de imagens configurada em `--image-counts`;
 - repetição configurada em `--repetitions`.
 
 A fórmula do total de chamadas é:
 
 ```txt
-numero_de_produtos x numero_de_modelos x numero_de_modos_de_imagem x repeticoes
+numero_de_produtos x numero_de_modelos x numero_de_modos_de_imagem x quantidades_de_imagens x repeticoes
 ```
 
 Exemplo:
 
 ```txt
-5 produtos x 6 modelos x 3 modos x 3 repeticoes = 270 chamadas
+5 produtos x 6 modelos x 3 modos x 1 quantidade de imagem x 3 repeticoes = 270 chamadas
 ```
 
 As repetições existem porque respostas de modelos podem variar mesmo com o mesmo prompt, imagem e descrição. Repetir ajuda a medir estabilidade e reduz o risco de concluir algo a partir de uma resposta isolada.
+
+Para comparar uma foto contra múltiplas fotos, um exemplo de execução é:
+
+```bash
+python tests/run_tests.py --image-counts 1 2 3 --repetitions 3
+```
+
+Samples que tiverem apenas `imagem` só podem ser executados com `--image-counts 1`.
 
 ## Modos de imagem
 

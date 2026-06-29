@@ -20,6 +20,7 @@ from product_estimator.post_processing import get_metricas_logisticas, get_objet
 
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_UPLOAD_IMAGES = 3
 KNOWN_MEASURE_TYPES = {"comprimento", "largura", "altura", "peso"}
 MANUAL_CORRECTION_TYPES = KNOWN_MEASURE_TYPES
 
@@ -83,6 +84,57 @@ def get_payload_cubage_factor(payload: dict[str, Any]) -> float:
         raw_factor = payload.get("metricas_logisticas", {}).get("fator_cubagem", FATOR_CUBAGEM)
 
     return parse_cubage_factor(str(raw_factor))
+
+
+def get_uploaded_images(
+    image: UploadFile | None,
+    images: list[UploadFile] | None,
+) -> list[UploadFile]:
+    uploaded_images = []
+
+    if image is not None:
+        uploaded_images.append(image)
+    if images:
+        uploaded_images.extend(images)
+
+    if not uploaded_images:
+        raise HTTPException(status_code=400, detail="Ao menos uma imagem é obrigatória.")
+
+    if len(uploaded_images) > MAX_UPLOAD_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Envie no máximo {MAX_UPLOAD_IMAGES} imagens do produto.",
+        )
+
+    return uploaded_images
+
+
+async def save_upload_image(uploaded_image: UploadFile, image_number: int) -> Path:
+    if not uploaded_image.content_type or not uploaded_image.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"O arquivo {image_number} precisa ser uma imagem.",
+        )
+
+    image_bytes = await uploaded_image.read()
+    if not image_bytes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A imagem {image_number} está vazia.",
+        )
+
+    if len(image_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"A imagem {image_number} deve ter no máximo 10 MB.",
+        )
+
+    suffix = Path(uploaded_image.filename or "").suffix or ".jpg"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+        temp_path = Path(temp_file.name)
+        temp_file.write(image_bytes)
+
+    return temp_path
 
 
 def parse_known_measures(raw_known_measures: str) -> dict[str, float]:
@@ -188,7 +240,8 @@ def recalculate(request: dict[str, Any] = Body(...)) -> dict[str, Any]:
 
 @app.post("/estimate")
 async def estimate(
-    image: UploadFile = File(...),
+    image: UploadFile | None = File(None),
+    images: list[UploadFile] | None = File(None),
     description: str = Form(...),
     known_measures: str = Form("[]"),
     image_processing_mode: str = Form(DEFAULT_IMAGE_PROCESSING_MODE),
@@ -202,31 +255,21 @@ async def estimate(
     if not model_name:
         raise HTTPException(status_code=400, detail="O modelo de IA é obrigatório.")
 
-    if not image.content_type or not image.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="O arquivo enviado precisa ser uma imagem.")
-
-    image_bytes = await image.read()
-    if not image_bytes:
-        raise HTTPException(status_code=400, detail="A imagem enviada está vazia.")
-
-    if len(image_bytes) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="A imagem deve ter no máximo 10 MB.")
-
+    uploaded_images = get_uploaded_images(image, images)
     parsed_known_measures = parse_known_measures(known_measures)
     parsed_cubage_factor = parse_cubage_factor(cubage_factor)
     if image_processing_mode not in IMAGE_PROCESSING_MODES:
         raise HTTPException(status_code=400, detail="Modo de processamento de imagem inválido.")
 
-    suffix = Path(image.filename or "").suffix or ".jpg"
-    temp_path: Path | None = None
+    temp_paths: list[Path] = []
 
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            temp_path = Path(temp_file.name)
-            temp_file.write(image_bytes)
+        for index, uploaded_image in enumerate(uploaded_images, start=1):
+            temp_paths.append(await save_upload_image(uploaded_image, index))
 
         return estimate_product(
-            image_path=temp_path,
+            image_path=temp_paths[0],
+            image_paths=temp_paths,
             product_description=description.strip(),
             model=model_name,
             known_measures=parsed_known_measures,
@@ -241,5 +284,5 @@ async def estimate(
             detail=f"Não foi possível estimar o produto: {exc}",
         ) from exc
     finally:
-        if temp_path:
+        for temp_path in temp_paths:
             temp_path.unlink(missing_ok=True)
