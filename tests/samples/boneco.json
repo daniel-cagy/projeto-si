@@ -1,0 +1,11 @@
+{
+    "imagens": ["boneco1.jpg",
+                "boneco2.jpg"],
+    "descricao": "Funko Pop Football NFL Aaron Rodgers",
+    "resultado_esperado": {
+        "comprimento": 16,
+        "largura": 11.5,
+        "altura": 9,
+        "peso": 0.14
+    }
+}

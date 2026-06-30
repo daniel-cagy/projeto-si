@@ -1,0 +1,11 @@
+{
+    "imagens": ["controle1.jpg",
+                "controle2.jpg"],
+    "descricao": "Controle sem fio Dualsense preto para ps5",
+    "resultado_esperado": {
+        "comprimento": 19,
+        "largura": 19,
+        "altura": 7,
+        "peso": 0.4
+    }
+}

@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.colors import TwoSlopeNorm
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
 from matplotlib.ticker import FuncFormatter
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -22,13 +22,88 @@ IMAGE_PROCESSING_MODES = ["original", "resized", "quantized"]
 DIMENSION_MEASURES = ["comprimento", "largura", "altura"]
 MEASURES = [*DIMENSION_MEASURES, "peso"]
 WEIGHT_THRESHOLDS_GRAMS = [25, 50, 100]
+WEIGHT_CLASS_LIGHT_MAX_KG = 0.1
+WEIGHT_CLASS_MEDIUM_MAX_KG = 0.5
+WEIGHT_CLASS_ORDER = ["leve", "medio", "pesado"]
+WEIGHT_CLASS_LABELS = {
+    "leve": "Leve (<100g)",
+    "medio": "Médio (100g-500g)",
+    "pesado": "Pesado (>=500g)",
+}
+EXPORT_DPI = 320
+TEXT_COLOR = "#111827"
+MUTED_TEXT_COLOR = "#6B7280"
+GRID_COLOR = "#E5E7EB"
+SPINE_COLOR = "#CBD5E1"
+FIGURE_BACKGROUND = "#FFFFFF"
 MODE_COLORS = {
-    "original": "#4B5563",
-    "resized": "#00A868",
+    "original": "#64748B",
+    "resized": "#059669",
     "quantized": "#2563EB",
+}
+MODE_LABELS = {
+    "original": "Original",
+    "resized": "Redimensionada",
+    "quantized": "Quantizada",
+}
+MEASURE_LABELS = {
+    "comprimento": "Comprimento",
+    "largura": "Largura",
+    "altura": "Altura",
+    "peso": "Peso",
 }
 IMAGE_COUNT_BASE = 1
 IMAGE_COUNT_COMPARISON = 2
+ERROR_CMAP = LinearSegmentedColormap.from_list(
+    "presentation_error",
+    ["#F8FAFC", "#FDE68A", "#FB923C", "#B91C1C"],
+)
+SUCCESS_CMAP = LinearSegmentedColormap.from_list(
+    "presentation_success",
+    ["#F8FAFC", "#BBF7D0", "#22C55E", "#166534"],
+)
+COST_CMAP = LinearSegmentedColormap.from_list(
+    "presentation_cost",
+    ["#F8FAFC", "#BAE6FD", "#38BDF8", "#1D4ED8"],
+)
+GOOD_HIGH_CMAP = LinearSegmentedColormap.from_list(
+    "presentation_good_high",
+    ["#DC2626", "#F8FAFC", "#16A34A"],
+)
+GOOD_LOW_CMAP = LinearSegmentedColormap.from_list(
+    "presentation_good_low",
+    ["#16A34A", "#F8FAFC", "#DC2626"],
+)
+CMAP_ALIASES = {
+    "YlOrRd": ERROR_CMAP,
+    "YlGn": SUCCESS_CMAP,
+    "Blues": COST_CMAP,
+    "RdYlGn": GOOD_HIGH_CMAP,
+    "RdYlGn_r": GOOD_LOW_CMAP,
+}
+
+plt.rcParams.update({
+    "figure.facecolor": FIGURE_BACKGROUND,
+    "axes.facecolor": FIGURE_BACKGROUND,
+    "axes.edgecolor": SPINE_COLOR,
+    "axes.labelcolor": TEXT_COLOR,
+    "axes.titlecolor": TEXT_COLOR,
+    "axes.titlesize": 15,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 11,
+    "xtick.color": MUTED_TEXT_COLOR,
+    "ytick.color": MUTED_TEXT_COLOR,
+    "font.family": "DejaVu Sans",
+    "font.size": 10,
+    "legend.frameon": False,
+    "legend.fontsize": 9,
+    "legend.title_fontsize": 9,
+    "grid.color": GRID_COLOR,
+    "grid.linewidth": 0.8,
+    "savefig.facecolor": FIGURE_BACKGROUND,
+    "savefig.bbox": "tight",
+    "svg.fonttype": "none",
+})
 
 MODEL_PRICES_PER_1M = {
     "gpt-5.5": {"input": 5.00, "output": 30.00},
@@ -50,7 +125,9 @@ SUMMARY_FIELDS = [
     "mean_all_interval_hit_rate",
     "mean_dimension_interval_hit_rate",
     "mean_abs_percent_error_all",
+    "std_abs_percent_error_all",
     "mean_abs_percent_error_dimensions",
+    "std_abs_percent_error_dimensions",
     "mean_max_abs_percent_error_all",
     "mean_input_tokens",
     "mean_output_tokens",
@@ -68,6 +145,7 @@ SUMMARY_FIELDS = [
     "cost_benefit_score_all",
     "weight_mean_absolute_error_g",
     "weight_median_absolute_error_g",
+    "weight_std_absolute_error_g",
     "weight_within_25g_rate",
     "weight_within_50g_rate",
     "weight_within_100g_rate",
@@ -85,8 +163,10 @@ MEASURE_SUMMARY_FIELDS = [
     "valid_error_count",
     "mean_percent_error",
     "median_percent_error",
+    "std_percent_error",
     "mean_absolute_error",
     "median_absolute_error",
+    "std_absolute_error",
     "mean_signed_error",
     "mean_expected",
     "mean_estimate",
@@ -94,6 +174,7 @@ MEASURE_SUMMARY_FIELDS = [
     "interval_hit_rate",
     "mean_absolute_error_grams",
     "median_absolute_error_grams",
+    "std_absolute_error_grams",
     "within_25g_rate",
     "within_50g_rate",
     "within_100g_rate",
@@ -152,6 +233,27 @@ MEASURE_IMAGE_COUNT_DELTA_FIELDS = [
     "interval_hit_rate_1_image",
     "interval_hit_rate_2_images",
     "delta_interval_hit_rate",
+]
+
+WEIGHT_CLASS_SUMMARY_FIELDS = [
+    "group",
+    "weight_class",
+    "weight_class_label",
+    "runs",
+    "sample_count",
+    "mean_expected_weight_kg",
+    "mean_estimated_weight_kg",
+    "mean_percent_error",
+    "median_percent_error",
+    "std_percent_error",
+    "mean_absolute_error_g",
+    "median_absolute_error_g",
+    "std_absolute_error_g",
+    "interval_hit_rate",
+    "within_25g_rate",
+    "within_50g_rate",
+    "within_100g_rate",
+    "within_20_percent_rate",
 ]
 
 MEAN_SOURCE_COLUMNS = {
@@ -247,8 +349,25 @@ def load_results(input_csv: Path) -> pd.DataFrame:
     df["image_count"] = pd.to_numeric(df["image_count"], errors="coerce").fillna(IMAGE_COUNT_BASE).astype(int)
     df["success_bool"] = df["success"].astype(str).str.lower().eq("true")
     add_weight_error_columns(df)
+    add_weight_class_columns(df)
     add_cost_columns(df)
     return df
+
+
+def classify_weight_kg(weight_kg: Any) -> str | Any:
+    if pd.isna(weight_kg):
+        return pd.NA
+
+    weight_kg = float(weight_kg)
+    if weight_kg < WEIGHT_CLASS_LIGHT_MAX_KG:
+        return "leve"
+    if weight_kg < WEIGHT_CLASS_MEDIUM_MAX_KG:
+        return "medio"
+    return "pesado"
+
+
+def add_weight_class_columns(df: pd.DataFrame) -> None:
+    df["weight_class"] = df["peso_expected"].map(classify_weight_kg)
 
 
 def add_weight_error_columns(df: pd.DataFrame) -> None:
@@ -277,6 +396,13 @@ def add_cost_columns(df: pd.DataFrame) -> None:
 def numeric_sum(series: pd.Series) -> float | Any:
     if series.notna().any():
         return series.sum()
+    return pd.NA
+
+
+def numeric_std(series: pd.Series) -> float | Any:
+    clean_series = series.dropna()
+    if len(clean_series) >= 2:
+        return clean_series.std()
     return pd.NA
 
 
@@ -315,12 +441,20 @@ def build_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
         for output_column, source_column in MEAN_SOURCE_COLUMNS.items():
             row[output_column] = successful[source_column].mean() if not successful.empty else pd.NA
 
+        row["std_abs_percent_error_all"] = (
+            numeric_std(successful["mean_abs_percent_error_all"]) if not successful.empty else pd.NA
+        )
+        row["std_abs_percent_error_dimensions"] = (
+            numeric_std(successful["mean_abs_percent_error_dimensions"]) if not successful.empty else pd.NA
+        )
+
         for output_column, source_column in TOTAL_SOURCE_COLUMNS.items():
             row[output_column] = numeric_sum(successful[source_column]) if not successful.empty else pd.NA
 
         weight_error_grams = successful["peso_absolute_error_grams"].dropna() if not successful.empty else pd.Series(dtype="float64")
         row["weight_mean_absolute_error_g"] = weight_error_grams.mean() if not weight_error_grams.empty else pd.NA
         row["weight_median_absolute_error_g"] = weight_error_grams.median() if not weight_error_grams.empty else pd.NA
+        row["weight_std_absolute_error_g"] = numeric_std(weight_error_grams) if not weight_error_grams.empty else pd.NA
         for threshold in WEIGHT_THRESHOLDS_GRAMS:
             row[f"weight_within_{threshold}g_rate"] = (
                 boolean_rate(successful[f"peso_error_within_{threshold}g"]) if not successful.empty else pd.NA
@@ -350,6 +484,46 @@ def build_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=SUMMARY_FIELDS)
 
 
+def build_weight_class_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
+    rows = []
+    successful_df = df[df["success_bool"] & df["weight_class"].notna()]
+
+    for key, group in iter_groups(successful_df, group_columns):
+        group_name = " | ".join(str(value) for value in key)
+        percent_error = group["peso_percent_error"].dropna()
+        absolute_error_grams = group["peso_absolute_error_grams"].dropna()
+        expected_weight = group["peso_expected"].dropna()
+        estimated_weight = group["peso_estimate"].dropna()
+        interval_hit = group["peso_interval_hit"]
+        weight_classes = group["weight_class"].dropna().unique()
+        weight_class = weight_classes[0] if len(weight_classes) == 1 else "all"
+        sample_count = group["sample_id"].nunique() if "sample_id" in group.columns else pd.NA
+
+        row = {
+            "group": group_name,
+            "weight_class": weight_class,
+            "weight_class_label": WEIGHT_CLASS_LABELS.get(weight_class, str(weight_class)),
+            "runs": len(group),
+            "sample_count": sample_count,
+            "mean_expected_weight_kg": expected_weight.mean() if not expected_weight.empty else pd.NA,
+            "mean_estimated_weight_kg": estimated_weight.mean() if not estimated_weight.empty else pd.NA,
+            "mean_percent_error": percent_error.mean() if not percent_error.empty else pd.NA,
+            "median_percent_error": percent_error.median() if not percent_error.empty else pd.NA,
+            "std_percent_error": numeric_std(percent_error),
+            "mean_absolute_error_g": absolute_error_grams.mean() if not absolute_error_grams.empty else pd.NA,
+            "median_absolute_error_g": absolute_error_grams.median() if not absolute_error_grams.empty else pd.NA,
+            "std_absolute_error_g": numeric_std(absolute_error_grams),
+            "interval_hit_rate": interval_hit.mean() if len(interval_hit) else pd.NA,
+            "within_25g_rate": boolean_rate(group["peso_error_within_25g"]),
+            "within_50g_rate": boolean_rate(group["peso_error_within_50g"]),
+            "within_100g_rate": boolean_rate(group["peso_error_within_100g"]),
+            "within_20_percent_rate": boolean_rate(group["peso_error_within_20_percent"]),
+        }
+        rows.append(row)
+
+    return pd.DataFrame(rows, columns=WEIGHT_CLASS_SUMMARY_FIELDS)
+
+
 def build_measure_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
     rows = []
     successful_df = df[df["success_bool"]]
@@ -372,8 +546,10 @@ def build_measure_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.Data
                 "valid_error_count": int(percent_error.count()),
                 "mean_percent_error": percent_error.mean() if not percent_error.empty else pd.NA,
                 "median_percent_error": percent_error.median() if not percent_error.empty else pd.NA,
+                "std_percent_error": numeric_std(percent_error),
                 "mean_absolute_error": absolute_error.mean() if not absolute_error.empty else pd.NA,
                 "median_absolute_error": absolute_error.median() if not absolute_error.empty else pd.NA,
+                "std_absolute_error": numeric_std(absolute_error),
                 "mean_signed_error": signed_error.mean() if not signed_error.empty else pd.NA,
                 "mean_expected": expected.mean() if not expected.empty else pd.NA,
                 "mean_estimate": estimate.mean() if not estimate.empty else pd.NA,
@@ -381,6 +557,7 @@ def build_measure_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.Data
                 "interval_hit_rate": interval_hit.mean() if len(interval_hit) else pd.NA,
                 "mean_absolute_error_grams": pd.NA,
                 "median_absolute_error_grams": pd.NA,
+                "std_absolute_error_grams": pd.NA,
                 "within_25g_rate": pd.NA,
                 "within_50g_rate": pd.NA,
                 "within_100g_rate": pd.NA,
@@ -395,6 +572,7 @@ def build_measure_summary(df: pd.DataFrame, group_columns: list[str]) -> pd.Data
                 row["median_absolute_error_grams"] = (
                     absolute_error_grams.median() if not absolute_error_grams.empty else pd.NA
                 )
+                row["std_absolute_error_grams"] = numeric_std(absolute_error_grams)
                 for threshold in WEIGHT_THRESHOLDS_GRAMS:
                     row[f"within_{threshold}g_rate"] = boolean_rate(group[f"peso_error_within_{threshold}g"])
                 row["within_20_percent_rate"] = boolean_rate(group["peso_error_within_20_percent"])
@@ -468,6 +646,36 @@ def split_model_mode_image_count(summary: pd.DataFrame, metric: str) -> pd.DataF
         if image_count_label(count) in pivot.columns
     ]
     return pivot[ordered_labels]
+
+
+def split_model_mode_weight_class(summary: pd.DataFrame, metric: str) -> pd.DataFrame:
+    if summary.empty or "group" not in summary.columns or metric not in summary.columns:
+        return pd.DataFrame()
+
+    parts = summary["group"].str.split(" | ", regex=False, expand=True)
+    if parts.shape[1] < 3:
+        return pd.DataFrame()
+
+    data = pd.DataFrame({
+        "group": parts[0] + " | " + parts[1],
+        "weight_class": parts[2],
+        metric: pd.to_numeric(summary[metric], errors="coerce"),
+    })
+    pivot = data.pivot_table(index="group", columns="weight_class", values=metric, aggfunc="mean")
+    ordered_columns = [weight_class for weight_class in WEIGHT_CLASS_ORDER if weight_class in pivot.columns]
+    return pivot[ordered_columns]
+
+
+def sort_weight_class_summary(summary: pd.DataFrame) -> pd.DataFrame:
+    if summary.empty or "weight_class" not in summary.columns:
+        return summary
+
+    order = {weight_class: index for index, weight_class in enumerate(WEIGHT_CLASS_ORDER)}
+    return (
+        summary.assign(_weight_class_order=summary["weight_class"].map(order).fillna(len(order)))
+        .sort_values("_weight_class_order")
+        .drop(columns="_weight_class_order")
+    )
 
 
 def get_metric_for_image_count(group: pd.DataFrame, image_count: int, metric: str) -> Any:
@@ -608,6 +816,142 @@ def build_measure_image_count_delta_summary(measure_summary: pd.DataFrame) -> pd
     return pd.DataFrame(rows, columns=MEASURE_IMAGE_COUNT_DELTA_FIELDS)
 
 
+
+def display_mode(mode: Any) -> str:
+    return MODE_LABELS.get(str(mode), str(mode))
+
+
+def display_measure(measure: Any) -> str:
+    return MEASURE_LABELS.get(str(measure), str(measure))
+
+
+def display_weight_class(weight_class: Any) -> str:
+    return WEIGHT_CLASS_LABELS.get(str(weight_class), str(weight_class))
+
+
+def display_category(value: Any) -> str:
+    value = str(value)
+    if value in MODE_LABELS:
+        return display_mode(value)
+    if value in WEIGHT_CLASS_LABELS:
+        return display_weight_class(value)
+    return display_measure(value)
+
+
+def display_group_label(label: Any) -> str:
+    parts = str(label).split(" | ")
+
+    if len(parts) >= 2 and parts[1] in MODE_LABELS:
+        return f"{parts[0]}\n{display_mode(parts[1])}"
+
+    if len(parts) >= 2 and parts[0] in MODE_LABELS:
+        return f"{display_mode(parts[0])}\n{parts[1]}"
+
+    return str(label)
+
+
+def display_mode_columns(columns) -> list[str]:
+    return [display_mode(column) for column in columns]
+
+
+def display_measure_columns(columns) -> list[str]:
+    return [display_measure(column) for column in columns]
+
+
+def display_weight_class_columns(columns) -> list[str]:
+    return [display_weight_class(column) for column in columns]
+
+
+def resolve_cmap(cmap: str):
+    return CMAP_ALIASES.get(cmap, cmap)
+
+
+def save_figure(fig, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, facecolor=FIGURE_BACKGROUND, bbox_inches="tight")
+
+    if path.suffix.lower() == ".svg":
+        fig.savefig(
+            path.with_suffix(".png"),
+            dpi=EXPORT_DPI,
+            facecolor=FIGURE_BACKGROUND,
+            bbox_inches="tight",
+        )
+
+
+def style_axes(ax, title: str, y_label: str, x_label: str = "") -> None:
+    ax.set_title(title, loc="left", pad=16)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label, labelpad=8)
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", alpha=0.8)
+
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(SPINE_COLOR)
+        ax.spines[side].set_linewidth(0.8)
+
+    ax.tick_params(axis="both", length=0)
+    ax.margins(y=0.14)
+
+
+def format_chart_value(value: Any, y_percent: bool = False, y_currency: bool = False) -> str:
+    if pd.isna(value):
+        return ""
+
+    value = float(value)
+    if y_percent:
+        return f"{value:.0%}"
+    if y_currency:
+        if abs(value) < 0.01:
+            return f"${value:.4f}"
+        if abs(value) < 1:
+            return f"${value:.3f}"
+        return f"${value:.2f}"
+    if abs(value) >= 1000:
+        return f"{value:,.0f}"
+    if abs(value) < 10:
+        return f"{value:.2f}"
+    return f"{value:.1f}"
+
+
+def annotate_bars(ax, y_percent: bool = False, y_currency: bool = False) -> None:
+    containers = [container for container in ax.containers if hasattr(container, "datavalues")]
+    total_bars = sum(len(container.datavalues) for container in containers)
+    if total_bars > 24:
+        return
+
+    for container in containers:
+        labels = [format_chart_value(value, y_percent, y_currency) for value in container.datavalues]
+        ax.bar_label(
+            container,
+            labels=labels,
+            padding=3,
+            fontsize=8,
+            color=MUTED_TEXT_COLOR,
+        )
+
+
+def heatmap_text_color(image, value: float) -> str:
+    red, green, blue, _ = image.cmap(image.norm(value))
+    luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    return FIGURE_BACKGROUND if luminance < 0.5 else TEXT_COLOR
+
+
+def style_colorbar(colorbar, colorbar_label: str) -> None:
+    colorbar.set_label(colorbar_label, color=TEXT_COLOR, labelpad=10)
+    colorbar.outline.set_visible(False)
+    colorbar.ax.tick_params(length=0, colors=MUTED_TEXT_COLOR)
+
+
+def add_heatmap_grid(ax, row_count: int, column_count: int) -> None:
+    ax.set_xticks([index - 0.5 for index in range(column_count + 1)], minor=True)
+    ax.set_yticks([index - 0.5 for index in range(row_count + 1)], minor=True)
+    ax.grid(which="minor", color=FIGURE_BACKGROUND, linestyle="-", linewidth=1.5)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+
 def get_heatmap_norm(matrix, center_zero: bool):
     if not center_zero:
         return None
@@ -636,25 +980,40 @@ def save_grouped_bar_chart(
         return
 
     ordered_columns = [mode for mode in IMAGE_PROCESSING_MODES if mode in data.columns]
-    data = data[ordered_columns]
+    if not ordered_columns:
+        return
 
-    colors = [MODE_COLORS.get(mode, "#6B7280") for mode in data.columns]
-    ax = data.plot(kind="bar", figsize=(12, 6), width=0.78, color=colors)
-    ax.set_title(title, fontsize=14, fontweight="bold")
-    ax.set_xlabel("Modelo")
-    ax.set_ylabel(y_label)
-    ax.grid(axis="y", alpha=0.25)
-    ax.legend(title="Imagem")
-    ax.tick_params(axis="x", rotation=35)
+    data = data[ordered_columns]
+    plot_data = data.rename(columns=MODE_LABELS)
+    colors = [MODE_COLORS.get(mode, "#6B7280") for mode in ordered_columns]
+
+    fig, ax = plt.subplots(figsize=(12.5, 6.5))
+    plot_data.plot(
+        kind="bar",
+        ax=ax,
+        width=0.74,
+        color=colors,
+        edgecolor=FIGURE_BACKGROUND,
+        linewidth=0.6,
+    )
+
+    style_axes(ax, title, y_label, "Modelo")
+    ax.set_xticklabels([display_group_label(label) for label in plot_data.index], rotation=0, ha="center")
+    ax.legend(title="Tratamento da imagem", loc="upper right")
 
     if y_percent:
         ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
+        finite_values = data.to_numpy(dtype=float, na_value=float("nan"))
+        finite_values = finite_values[pd.notna(finite_values)]
+        if len(finite_values) and finite_values.min() >= 0 and finite_values.max() <= 1:
+            ax.set_ylim(0, 1.06)
     if y_currency:
         ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"${value:.4f}"))
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    annotate_bars(ax, y_percent=y_percent, y_currency=y_currency)
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
 
 
 def save_simple_bar_chart(
@@ -662,25 +1021,33 @@ def save_simple_bar_chart(
     data: pd.DataFrame,
     title: str,
     y_label: str,
-    color: str = "#00A868",
+    color: str = "#059669",
     y_currency: bool = False,
 ) -> None:
     if data.empty:
         return
 
-    ax = data.plot(kind="bar", x="group", y="value", figsize=(8, 5), legend=False, color=color)
-    ax.set_title(title, fontsize=14, fontweight="bold")
-    ax.set_xlabel("")
-    ax.set_ylabel(y_label)
-    ax.grid(axis="y", alpha=0.25)
-    ax.tick_params(axis="x", rotation=20)
+    fig, ax = plt.subplots(figsize=(9, 5.4))
+    data.plot(
+        kind="bar",
+        x="group",
+        y="value",
+        ax=ax,
+        legend=False,
+        color=color,
+        edgecolor=FIGURE_BACKGROUND,
+        linewidth=0.6,
+    )
+    style_axes(ax, title, y_label)
+    ax.set_xticklabels([display_category(label) for label in data["group"]], rotation=0, ha="center")
 
     if y_currency:
         ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"${value:.4f}"))
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    annotate_bars(ax, y_currency=y_currency)
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
 
 
 def save_heatmap(
@@ -696,35 +1063,55 @@ def save_heatmap(
     if data.empty or data.dropna(how="all").empty:
         return
 
-    data = data[[measure for measure in MEASURES if measure in data.columns]]
+    ordered_columns = [measure for measure in MEASURES if measure in data.columns]
+    if not ordered_columns:
+        return
+
+    data = data[ordered_columns]
     data = data.apply(pd.to_numeric, errors="coerce")
     matrix = data.to_numpy(dtype=float, na_value=float("nan"))
 
-    height = max(5, 0.38 * len(data.index) + 2)
-    width = max(8, 1.35 * len(data.columns) + 5)
+    height = max(5, 0.44 * len(data.index) + 2.2)
+    width = max(8.5, 1.45 * len(data.columns) + 5.2)
     fig, ax = plt.subplots(figsize=(width, height))
-    image = ax.imshow(matrix, aspect="auto", cmap=cmap, norm=get_heatmap_norm(matrix, center_zero))
+    image = ax.imshow(
+        matrix,
+        aspect="auto",
+        cmap=resolve_cmap(cmap),
+        norm=get_heatmap_norm(matrix, center_zero),
+    )
 
-    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.set_title(title, loc="left", pad=16)
     ax.set_xticks(range(len(data.columns)))
-    ax.set_xticklabels(data.columns)
+    ax.set_xticklabels(display_measure_columns(data.columns))
     ax.set_yticks(range(len(data.index)))
-    ax.set_yticklabels(data.index)
+    ax.set_yticklabels([display_group_label(label) for label in data.index])
+    ax.tick_params(axis="both", length=0)
+    add_heatmap_grid(ax, len(data.index), len(data.columns))
 
     for row_index, row_label in enumerate(data.index):
         for col_index, column in enumerate(data.columns):
             value = matrix[row_index, col_index]
             if pd.notna(value):
-                ax.text(col_index, row_index, value_format.format(float(value)), ha="center", va="center", fontsize=8)
+                ax.text(
+                    col_index,
+                    row_index,
+                    value_format.format(float(value)),
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    fontweight="bold",
+                    color=heatmap_text_color(image, float(value)),
+                )
 
-    colorbar = fig.colorbar(image, ax=ax)
-    colorbar.set_label(colorbar_label)
+    colorbar = fig.colorbar(image, ax=ax, fraction=0.045, pad=0.025)
+    style_colorbar(colorbar, colorbar_label)
     if colorbar_percent:
         colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
 
 
 def save_measure_heatmaps(path_prefix: Path, summary: pd.DataFrame) -> None:
@@ -737,6 +1124,16 @@ def save_measure_heatmaps(path_prefix: Path, summary: pd.DataFrame) -> None:
         error_data,
         "Erro percentual médio por medida",
         "Erro médio (%)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+
+    std_error_data = summary.pivot(index="group", columns="measure", values="std_percent_error")
+    save_heatmap(
+        path_prefix / "std_percent_error_by_measure_heatmap.svg",
+        std_error_data,
+        "Desvio padrão do erro por medida",
+        "Desvio padrão do erro (p.p.)",
         "YlOrRd",
         "{:.1f}",
     )
@@ -770,20 +1167,30 @@ def save_model_mode_heatmap(
         return
 
     ordered_columns = [mode for mode in IMAGE_PROCESSING_MODES if mode in data.columns]
+    if not ordered_columns:
+        return
+
     data = data[ordered_columns]
     data = data.apply(pd.to_numeric, errors="coerce")
     matrix = data.to_numpy(dtype=float, na_value=float("nan"))
 
-    height = max(4.5, 0.58 * len(data.index) + 2)
-    width = max(7, 1.45 * len(data.columns) + 4.8)
+    height = max(4.8, 0.68 * len(data.index) + 2.2)
+    width = max(7.5, 1.75 * len(data.columns) + 5.2)
     fig, ax = plt.subplots(figsize=(width, height))
-    image = ax.imshow(matrix, aspect="auto", cmap=cmap, norm=get_heatmap_norm(matrix, center_zero))
+    image = ax.imshow(
+        matrix,
+        aspect="auto",
+        cmap=resolve_cmap(cmap),
+        norm=get_heatmap_norm(matrix, center_zero),
+    )
 
-    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.set_title(title, loc="left", pad=16)
     ax.set_xticks(range(len(data.columns)))
-    ax.set_xticklabels(data.columns)
+    ax.set_xticklabels(display_mode_columns(data.columns))
     ax.set_yticks(range(len(data.index)))
-    ax.set_yticklabels(data.index)
+    ax.set_yticklabels([display_group_label(label) for label in data.index])
+    ax.tick_params(axis="both", length=0)
+    add_heatmap_grid(ax, len(data.index), len(data.columns))
 
     for row_index, row_label in enumerate(data.index):
         for col_index, column in enumerate(data.columns):
@@ -796,18 +1203,20 @@ def save_model_mode_heatmap(
                     ha="center",
                     va="center",
                     fontsize=9,
+                    fontweight="bold",
+                    color=heatmap_text_color(image, float(value)),
                 )
 
-    colorbar = fig.colorbar(image, ax=ax)
-    colorbar.set_label(colorbar_label)
+    colorbar = fig.colorbar(image, ax=ax, fraction=0.045, pad=0.025)
+    style_colorbar(colorbar, colorbar_label)
     if colorbar_percent:
         colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
     if colorbar_currency:
         colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"${value:.3f}"))
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
 
 
 def save_model_mode_heatmaps(path_prefix: Path, summary: pd.DataFrame) -> None:
@@ -826,6 +1235,24 @@ def save_model_mode_heatmaps(path_prefix: Path, summary: pd.DataFrame) -> None:
         "mean_abs_percent_error_all",
         "Erro médio incluindo peso por modelo e imagem",
         "Erro médio incluindo peso (%)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+    save_model_mode_heatmap(
+        path_prefix / "heatmap_std_error_dimensions_by_model_mode.svg",
+        summary,
+        "std_abs_percent_error_dimensions",
+        "Desvio padrão do erro dimensional por modelo e imagem",
+        "Desvio padrão do erro dimensional (p.p.)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+    save_model_mode_heatmap(
+        path_prefix / "heatmap_std_error_including_weight_by_model_mode.svg",
+        summary,
+        "std_abs_percent_error_all",
+        "Desvio padrão do erro incluindo peso por modelo e imagem",
+        "Desvio padrão do erro incluindo peso (p.p.)",
         "YlOrRd",
         "{:.1f}",
     )
@@ -879,16 +1306,18 @@ def save_model_mode_image_count_heatmap(
     data = data.apply(pd.to_numeric, errors="coerce")
     matrix = data.to_numpy(dtype=float, na_value=float("nan"))
 
-    height = max(4.5, 0.52 * len(data.index) + 2)
-    width = max(7, 1.55 * len(data.columns) + 5)
+    height = max(4.8, 0.62 * len(data.index) + 2.2)
+    width = max(7.5, 1.65 * len(data.columns) + 5.2)
     fig, ax = plt.subplots(figsize=(width, height))
-    image = ax.imshow(matrix, aspect="auto", cmap=cmap)
+    image = ax.imshow(matrix, aspect="auto", cmap=resolve_cmap(cmap))
 
-    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.set_title(title, loc="left", pad=16)
     ax.set_xticks(range(len(data.columns)))
     ax.set_xticklabels(data.columns)
     ax.set_yticks(range(len(data.index)))
-    ax.set_yticklabels(data.index)
+    ax.set_yticklabels([display_group_label(label) for label in data.index])
+    ax.tick_params(axis="both", length=0)
+    add_heatmap_grid(ax, len(data.index), len(data.columns))
 
     for row_index, row_label in enumerate(data.index):
         for col_index, column in enumerate(data.columns):
@@ -901,18 +1330,115 @@ def save_model_mode_image_count_heatmap(
                     ha="center",
                     va="center",
                     fontsize=9,
+                    fontweight="bold",
+                    color=heatmap_text_color(image, float(value)),
                 )
 
-    colorbar = fig.colorbar(image, ax=ax)
-    colorbar.set_label(colorbar_label)
+    colorbar = fig.colorbar(image, ax=ax, fraction=0.045, pad=0.025)
+    style_colorbar(colorbar, colorbar_label)
     if colorbar_percent:
         colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
     if colorbar_currency:
         colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"${value:.4f}"))
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
+
+
+def save_weight_class_heatmap(
+    path: Path,
+    summary: pd.DataFrame,
+    metric: str,
+    title: str,
+    colorbar_label: str,
+    cmap: str,
+    value_format: str,
+    colorbar_percent: bool = False,
+) -> None:
+    data = split_model_mode_weight_class(summary, metric)
+    if data.empty or data.dropna(how="all").empty:
+        return
+
+    data = data.apply(pd.to_numeric, errors="coerce")
+    matrix = data.to_numpy(dtype=float, na_value=float("nan"))
+
+    height = max(4.8, 0.62 * len(data.index) + 2.2)
+    width = max(8.5, 1.9 * len(data.columns) + 5.2)
+    fig, ax = plt.subplots(figsize=(width, height))
+    image = ax.imshow(matrix, aspect="auto", cmap=resolve_cmap(cmap))
+
+    ax.set_title(title, loc="left", pad=16)
+    ax.set_xticks(range(len(data.columns)))
+    ax.set_xticklabels(display_weight_class_columns(data.columns))
+    ax.set_yticks(range(len(data.index)))
+    ax.set_yticklabels([display_group_label(label) for label in data.index])
+    ax.tick_params(axis="both", length=0)
+    add_heatmap_grid(ax, len(data.index), len(data.columns))
+
+    for row_index, row_label in enumerate(data.index):
+        for col_index, column in enumerate(data.columns):
+            value = matrix[row_index, col_index]
+            if pd.notna(value):
+                ax.text(
+                    col_index,
+                    row_index,
+                    value_format.format(float(value)),
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    fontweight="bold",
+                    color=heatmap_text_color(image, float(value)),
+                )
+
+    colorbar = fig.colorbar(image, ax=ax, fraction=0.045, pad=0.025)
+    style_colorbar(colorbar, colorbar_label)
+    if colorbar_percent:
+        colorbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
+
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
+
+
+def save_weight_class_heatmaps(output_dir: Path, summary: pd.DataFrame) -> None:
+    save_weight_class_heatmap(
+        output_dir / "heatmap_weight_std_percent_error_by_model_mode_weight_class.svg",
+        summary,
+        "std_percent_error",
+        "Desvio padrão do erro de peso por faixa",
+        "Desvio padrão do erro de peso (p.p.)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+    save_weight_class_heatmap(
+        output_dir / "heatmap_weight_std_absolute_error_g_by_model_mode_weight_class.svg",
+        summary,
+        "std_absolute_error_g",
+        "Desvio padrão absoluto do erro de peso por faixa",
+        "Desvio padrão absoluto (g)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+    save_weight_class_heatmap(
+        output_dir / "heatmap_weight_mean_percent_error_by_model_mode_weight_class.svg",
+        summary,
+        "mean_percent_error",
+        "Erro médio de peso por faixa",
+        "Erro médio de peso (%)",
+        "YlOrRd",
+        "{:.1f}",
+    )
+    save_weight_class_heatmap(
+        output_dir / "heatmap_weight_interval_hit_by_model_mode_weight_class.svg",
+        summary,
+        "interval_hit_rate",
+        "Taxa de acerto de peso por faixa",
+        "Taxa de acerto de peso",
+        "YlGn",
+        "{:.0%}",
+        colorbar_percent=True,
+    )
 
 
 def save_image_count_heatmaps(
@@ -1086,7 +1612,7 @@ def save_cost_benefit_scatter(path: Path, summary: pd.DataFrame) -> None:
     if data.empty:
         return
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10.8, 6.4))
     for mode in IMAGE_PROCESSING_MODES:
         mode_data = data[data["mode"] == mode]
         if mode_data.empty:
@@ -1094,31 +1620,52 @@ def save_cost_benefit_scatter(path: Path, summary: pd.DataFrame) -> None:
         ax.scatter(
             mode_data["mean_calculated_cost_usd"],
             mode_data["mean_dimension_interval_hit_rate"],
-            label=mode,
+            label=display_mode(mode),
             color=MODE_COLORS.get(mode, "#6B7280"),
-            s=90,
-            alpha=0.85,
+            s=120,
+            alpha=0.92,
+            edgecolor=FIGURE_BACKGROUND,
+            linewidth=1.2,
         )
         for _, row in mode_data.iterrows():
             ax.annotate(
                 str(row["model"]),
                 (row["mean_calculated_cost_usd"], row["mean_dimension_interval_hit_rate"]),
-                xytext=(5, 4),
+                xytext=(7, 5),
                 textcoords="offset points",
-                fontsize=8,
+                fontsize=8.5,
+                color=TEXT_COLOR,
             )
 
-    ax.set_title("Custo-benefício dimensional por modelo e tratamento de imagem", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Custo médio por chamada (USD)")
-    ax.set_ylabel("Taxa média de acerto dimensional")
+    median_cost = data["mean_calculated_cost_usd"].median()
+    median_hit = data["mean_dimension_interval_hit_rate"].median()
+    ax.axvline(median_cost, color=GRID_COLOR, linestyle="--", linewidth=1.0, zorder=0)
+    ax.axhline(median_hit, color=GRID_COLOR, linestyle="--", linewidth=1.0, zorder=0)
+    ax.text(
+        0.02,
+        0.98,
+        "melhor região: mais alto e à esquerda",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=9,
+        color=MUTED_TEXT_COLOR,
+    )
+
+    style_axes(
+        ax,
+        "Custo-benefício dimensional por modelo e tratamento de imagem",
+        "Taxa média de acerto dimensional",
+        "Custo médio por chamada (USD)",
+    )
+    ax.grid(axis="both", alpha=0.75)
     ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"${value:.4f}"))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
-    ax.grid(alpha=0.25)
-    ax.legend(title="Imagem")
+    ax.legend(title="Tratamento da imagem", loc="lower right")
 
-    plt.tight_layout()
-    plt.savefig(path)
-    plt.close()
+    fig.tight_layout(pad=1.4)
+    save_figure(fig, path)
+    plt.close(fig)
 
 
 def best_row(summary: pd.DataFrame, column: str, ascending: bool) -> pd.Series | None:
@@ -1141,6 +1688,14 @@ def format_number(value: Any, suffix: str = "") -> str:
     return f"{float(value):.2f}{suffix}"
 
 
+def format_count(value: Any, singular: str, plural: str) -> str:
+    if pd.isna(value):
+        return f"n/a {plural}"
+    count = int(value)
+    label = singular if count == 1 else plural
+    return f"{count} {label}"
+
+
 def format_usd(value: Any) -> str:
     if pd.isna(value):
         return "n/a"
@@ -1154,6 +1709,7 @@ def write_report(
     model_mode_summary: pd.DataFrame,
     measure_summary: pd.DataFrame,
     image_count_delta_summary: pd.DataFrame,
+    weight_class_summary: pd.DataFrame,
 ) -> None:
     successes = int(df["success_bool"].sum())
     failures = len(df) - successes
@@ -1193,7 +1749,8 @@ def write_report(
     if best_error is not None:
         lines.append(
             f"- Menor erro médio dimensional: `{best_error['group']}` "
-            f"({format_number(best_error['mean_abs_percent_error_dimensions'], '%')})"
+            f"({format_number(best_error['mean_abs_percent_error_dimensions'], '%')}; "
+            f"desvio {format_number(best_error['std_abs_percent_error_dimensions'], ' p.p.')})"
         )
     if best_hit_rate is not None:
         lines.append(
@@ -1222,17 +1779,33 @@ def write_report(
             line = (
                 f"- `{row['measure']}`: erro médio {format_number(row['mean_percent_error'], '%')}; "
                 f"mediana {format_number(row['median_percent_error'], '%')}; "
+                f"desvio {format_number(row['std_percent_error'], ' p.p.')}; "
                 f"acerto de intervalo {format_percent(row['interval_hit_rate'])}"
             )
             if row["measure"] == "peso":
                 line += (
                     f"; erro absoluto médio {format_number(row['mean_absolute_error_grams'], 'g')}"
+                    f"; desvio absoluto {format_number(row['std_absolute_error_grams'], 'g')}"
                     f"; <=25g {format_percent(row['within_25g_rate'])}"
                     f"; <=50g {format_percent(row['within_50g_rate'])}"
                     f"; <=100g {format_percent(row['within_100g_rate'])}"
                     f"; <=20% {format_percent(row['within_20_percent_rate'])}"
                 )
             lines.append(line)
+
+    if not weight_class_summary.empty:
+        lines.extend(["", "## Peso por faixa", ""])
+        for _, row in sort_weight_class_summary(weight_class_summary).iterrows():
+            lines.append(
+                f"- `{row['weight_class_label']}`: "
+                f"{format_count(row['runs'], 'execução', 'execuções')}; "
+                f"{format_count(row['sample_count'], 'sample', 'samples')}; "
+                f"erro médio {format_number(row['mean_percent_error'], '%')}; "
+                f"desvio {format_number(row['std_percent_error'], ' p.p.')}; "
+                f"erro absoluto médio {format_number(row['mean_absolute_error_g'], 'g')}; "
+                f"desvio absoluto {format_number(row['std_absolute_error_g'], 'g')}; "
+                f"acerto de intervalo {format_percent(row['interval_hit_rate'])}"
+            )
 
     if not image_count_delta_summary.empty:
         lines.extend([
@@ -1278,11 +1851,14 @@ def write_report(
         "- `summary_by_measure.csv`",
         "- `summary_by_model_mode_weight.csv`",
         "- `summary_by_weight.csv`",
+        "- `summary_by_weight_class.csv`",
+        "- `summary_by_model_mode_weight_class.csv`",
+        "- `summary_by_processing_mode_weight_class.csv`",
         "- `summary_by_model_mode_image_count.csv`",
         "- `summary_by_image_count.csv`",
         "- `summary_delta_2_vs_1_images_by_model_mode.csv`",
         "- `summary_delta_2_vs_1_images_by_model_mode_measure.csv`",
-        "- gráficos `.svg` no mesmo diretório",
+        "- gráficos `.svg` e `.png` no mesmo diretório",
     ])
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -1320,6 +1896,15 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
         model_mode_measure_summary["measure"] == "peso"
     ].copy()
     weight_summary = measure_summary[measure_summary["measure"] == "peso"].copy()
+    weight_class_summary = build_weight_class_summary(df, ["weight_class"])
+    model_mode_weight_class_summary = build_weight_class_summary(
+        df,
+        ["model", "image_processing_mode", "weight_class"],
+    )
+    mode_weight_class_summary = build_weight_class_summary(
+        df,
+        ["image_processing_mode", "weight_class"],
+    )
 
     save_summary(output_dir / "summary_by_model_mode.csv", model_mode_summary)
     save_summary(output_dir / "summary_by_model.csv", model_summary)
@@ -1329,6 +1914,9 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
     save_summary(output_dir / "summary_by_measure.csv", measure_summary)
     save_summary(output_dir / "summary_by_model_mode_weight.csv", model_mode_weight_summary)
     save_summary(output_dir / "summary_by_weight.csv", weight_summary)
+    save_summary(output_dir / "summary_by_weight_class.csv", weight_class_summary)
+    save_summary(output_dir / "summary_by_model_mode_weight_class.csv", model_mode_weight_class_summary)
+    save_summary(output_dir / "summary_by_processing_mode_weight_class.csv", mode_weight_class_summary)
     save_summary(output_dir / "summary_by_model_mode_image_count.csv", model_mode_image_count_summary)
     save_summary(output_dir / "summary_by_image_count.csv", image_count_summary)
     save_summary(output_dir / "summary_by_processing_mode_image_count.csv", mode_image_count_summary)
@@ -1348,6 +1936,18 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
         split_model_mode(model_mode_summary, "mean_abs_percent_error_all"),
         "Erro percentual médio por modelo e imagem, incluindo peso",
         "Erro médio incluindo peso (%)",
+    )
+    save_grouped_bar_chart(
+        output_dir / "std_abs_percent_error_dimensions_by_model_mode.svg",
+        split_model_mode(model_mode_summary, "std_abs_percent_error_dimensions"),
+        "Desvio padrão do erro dimensional por modelo e imagem",
+        "Desvio padrão do erro (p.p.)",
+    )
+    save_grouped_bar_chart(
+        output_dir / "std_abs_percent_error_all_by_model_mode.svg",
+        split_model_mode(model_mode_summary, "std_abs_percent_error_all"),
+        "Desvio padrão do erro por modelo e imagem, incluindo peso",
+        "Desvio padrão do erro (p.p.)",
     )
     save_grouped_bar_chart(
         output_dir / "dimension_interval_hit_rate_by_model_mode.svg",
@@ -1405,6 +2005,12 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
         "Erro absoluto médio de peso por modelo e imagem",
         "Erro médio (g)",
     )
+    save_grouped_bar_chart(
+        output_dir / "weight_std_absolute_error_grams_by_model_mode.svg",
+        split_model_mode(model_mode_summary, "weight_std_absolute_error_g"),
+        "Desvio padrão absoluto do erro de peso por modelo e imagem",
+        "Desvio padrão absoluto (g)",
+    )
     for threshold in WEIGHT_THRESHOLDS_GRAMS:
         save_grouped_bar_chart(
             output_dir / f"weight_within_{threshold}g_rate_by_model_mode.svg",
@@ -1443,8 +2049,47 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
         "Erro médio (%)",
         color="#2563EB",
     )
+    measure_std_error = measure_summary[["measure", "std_percent_error"]].copy()
+    measure_std_error = measure_std_error.rename(columns={"measure": "group", "std_percent_error": "value"}).dropna(subset=["value"])
+    save_simple_bar_chart(
+        output_dir / "std_percent_error_by_measure.svg",
+        measure_std_error,
+        "Desvio padrão do erro percentual por medida",
+        "Desvio padrão do erro (p.p.)",
+        color="#7C3AED",
+    )
+    weight_class_summary_for_chart = sort_weight_class_summary(weight_class_summary)
+    weight_class_mean_error = weight_class_summary_for_chart[["weight_class", "mean_percent_error"]].copy()
+    weight_class_mean_error = weight_class_mean_error.rename(columns={"weight_class": "group", "mean_percent_error": "value"}).dropna(subset=["value"])
+    save_simple_bar_chart(
+        output_dir / "weight_mean_percent_error_by_weight_class.svg",
+        weight_class_mean_error,
+        "Erro médio de peso por faixa",
+        "Erro médio de peso (%)",
+        color="#2563EB",
+    )
+    weight_class_std_error = weight_class_summary_for_chart[["weight_class", "std_percent_error"]].copy()
+    weight_class_std_error = weight_class_std_error.rename(columns={"weight_class": "group", "std_percent_error": "value"}).dropna(subset=["value"])
+    save_simple_bar_chart(
+        output_dir / "weight_std_percent_error_by_weight_class.svg",
+        weight_class_std_error,
+        "Desvio padrão do erro de peso por faixa",
+        "Desvio padrão do erro (p.p.)",
+        color="#7C3AED",
+    )
+    weight_class_std_absolute_error = weight_class_summary_for_chart[["weight_class", "std_absolute_error_g"]].copy()
+    weight_class_std_absolute_error = weight_class_std_absolute_error.rename(columns={"weight_class": "group", "std_absolute_error_g": "value"}).dropna(subset=["value"])
+    save_simple_bar_chart(
+        output_dir / "weight_std_absolute_error_g_by_weight_class.svg",
+        weight_class_std_absolute_error,
+        "Desvio padrão absoluto do erro de peso por faixa",
+        "Desvio padrão absoluto (g)",
+        color="#7C3AED",
+    )
+
     save_measure_heatmaps(output_dir, model_mode_measure_summary)
     save_model_mode_heatmaps(output_dir, model_mode_summary)
+    save_weight_class_heatmaps(output_dir, model_mode_weight_class_summary)
     save_image_count_heatmaps(
         output_dir,
         model_mode_image_count_summary,
@@ -1463,6 +2108,12 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
             f"Erro percentual médio de {measure} por modelo e imagem",
             "Erro médio (%)",
         )
+        save_grouped_bar_chart(
+            output_dir / f"std_{measure}_percent_error_by_model_mode.svg",
+            split_measure_model_mode(model_mode_measure_summary, measure, "std_percent_error"),
+            f"Desvio padrão do erro de {measure} por modelo e imagem",
+            "Desvio padrão do erro (p.p.)",
+        )
 
     final_bytes = mode_summary[["group", "mean_final_bytes"]].copy()
     final_bytes = final_bytes.rename(columns={"mean_final_bytes": "value"}).dropna(subset=["value"])
@@ -1480,6 +2131,7 @@ def write_outputs(input_csv: Path, output_dir: Path) -> None:
         model_mode_summary,
         measure_summary,
         image_count_delta_summary,
+        weight_class_summary,
     )
 
 

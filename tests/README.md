@@ -171,6 +171,42 @@ Ela é a média dos erros percentuais das três dimensões em cada execução. D
 
 Essa é a métrica mais importante para avaliar qualidade dimensional.
 
+### Desvio padrão do erro
+
+A análise também calcula o desvio padrão do erro para medir estabilidade entre execuções. As principais colunas são:
+
+```txt
+std_abs_percent_error_dimensions
+std_abs_percent_error_all
+std_percent_error
+```
+
+As duas primeiras aparecem nos resumos agregados, como `summary_by_model_mode.csv`. A coluna `std_percent_error` aparece nos resumos por medida, como `summary_by_model_mode_measure.csv` e `summary_by_measure.csv`.
+
+Quanto menor o desvio padrão, mais consistente foi aquele modelo/modo de imagem. Uma média baixa com desvio alto indica que o resultado pode depender bastante da repetição ou do produto testado.
+
+### Peso por faixa
+
+A análise separa também os erros de peso por faixa, usando o peso real esperado do sample:
+
+```txt
+leve: peso < 0.1 kg
+medio: 0.1 kg <= peso < 0.5 kg
+pesado: peso >= 0.5 kg
+```
+
+Isso gera resumos como:
+
+```txt
+summary_by_weight_class.csv
+summary_by_model_mode_weight_class.csv
+summary_by_processing_mode_weight_class.csv
+```
+
+Esses arquivos ajudam a separar dois problemas diferentes: erro percentual alto em itens muito leves e erro absoluto alto em itens mais pesados. Para peso, olhe junto para `std_percent_error` e `std_absolute_error_g`.
+
+Use também a coluna `sample_count`: uma faixa com poucos produtos é útil como indício, mas ainda não sustenta uma conclusão robusta.
+
 ### Erro geral incluindo peso
 
 A coluna:
@@ -391,6 +427,9 @@ summary_by_model_mode_measure.csv
 summary_by_measure.csv
 summary_by_model_mode_weight.csv
 summary_by_weight.csv
+summary_by_weight_class.csv
+summary_by_model_mode_weight_class.csv
+summary_by_processing_mode_weight_class.csv
 summary_by_model_mode_image_count.csv
 summary_by_image_count.csv
 summary_by_processing_mode_image_count.csv
@@ -401,18 +440,31 @@ summary_delta_2_vs_1_images_by_model_mode_measure.csv
 report.md
 ```
 
-Também gera gráficos SVG, incluindo:
+Também gera gráficos em SVG e PNG de alta resolução. O SVG é melhor para edição/vetor; o PNG é mais prático para colar direto em slides. Exemplos:
 
 ```txt
 mean_abs_percent_error_dimensions_by_model_mode.svg
 mean_abs_percent_error_all_by_model_mode.svg
+std_abs_percent_error_dimensions_by_model_mode.svg
+std_abs_percent_error_all_by_model_mode.svg
 dimension_interval_hit_rate_by_model_mode.svg
 interval_hit_rate_by_model_mode.svg
 mean_percent_error_by_measure.svg
+std_percent_error_by_measure.svg
 mean_percent_error_by_measure_heatmap.svg
+std_percent_error_by_measure_heatmap.svg
 interval_hit_rate_by_measure_heatmap.svg
+weight_mean_percent_error_by_weight_class.svg
+weight_std_percent_error_by_weight_class.svg
+weight_std_absolute_error_g_by_weight_class.svg
+heatmap_weight_std_percent_error_by_model_mode_weight_class.svg
+heatmap_weight_std_absolute_error_g_by_model_mode_weight_class.svg
+heatmap_weight_mean_percent_error_by_model_mode_weight_class.svg
+heatmap_weight_interval_hit_by_model_mode_weight_class.svg
 heatmap_error_dimensions_by_model_mode.svg
 heatmap_error_including_weight_by_model_mode.svg
+heatmap_std_error_dimensions_by_model_mode.svg
+heatmap_std_error_including_weight_by_model_mode.svg
 heatmap_interval_hit_dimensions_by_model_mode.svg
 heatmap_interval_hit_including_weight_by_model_mode.svg
 heatmap_total_cost_by_model_mode.svg
@@ -447,11 +499,12 @@ Priorize:
 2. maior `mean_dimension_interval_hit_rate`;
 3. menor `mean_calculated_cost_usd`;
 4. peso aceitável em `weight_mean_absolute_error_g` e nas tolerâncias em gramas;
-5. `success_rate` próximo de 1.
+5. estabilidade do peso por faixa em `summary_by_weight_class.csv`;
+6. `success_rate` próximo de 1.
 
 Use `summary_by_sample_model_mode.csv` para descobrir produtos problemáticos. Se um produto específico puxa a média para cima, ele pode indicar uma categoria que precisa de tratamento especial.
 
-Use os heatmaps para comparar rápido modelos e modos de imagem. Para erro e custo, menor é melhor. Para taxa de acerto, maior é melhor.
+Use os heatmaps para comparar rápido modelos e modos de imagem. Para erro, desvio padrão e custo, menor é melhor. Para taxa de acerto, maior é melhor.
 
 Para a comparação de quantidade de imagens, use `summary_by_model_mode_image_count.csv` para ver os valores absolutos de 1 e 2 imagens. Use `summary_delta_2_vs_1_images_by_model_mode.csv` para ver a mudança direta. Nessa tabela, deltas são calculados como `2 imagens - 1 imagem`: em erro, custo e tokens, negativo é melhor; em taxa de acerto, positivo é melhor.
 

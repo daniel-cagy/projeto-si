@@ -1,0 +1,11 @@
+{
+    "imagens": ["teclado1.jpg",
+                "teclado2.jpg"],
+    "descricao": "Teclado Mecânico AULA F75",
+    "resultado_esperado": {
+        "comprimento": 35.5,
+        "largura": 18,
+        "altura": 5,
+        "peso": 1.2
+    }
+}
