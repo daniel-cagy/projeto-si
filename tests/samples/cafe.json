@@ -1,0 +1,11 @@
+{
+    "imagens": ["cafe1.jpg",
+                "cafe2.jpg"],
+    "descricao": "Café Arábica soluvel 3 corações",
+    "resultado_esperado": {
+        "comprimento": 15.6,
+        "largura": 7.5,
+        "altura": 5.8,
+        "peso": 0.4
+    }
+}

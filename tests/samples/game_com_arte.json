@@ -1,0 +1,11 @@
+{
+    "imagens": ["game_com_arte1.jpg",
+                "game_com_arte2.jpg"],
+    "descricao": "Astro Bot ps5 original midia fisica",
+    "resultado_esperado": {
+        "comprimento": 17.1,
+        "largura": 13.5,
+        "altura": 1.5,
+        "peso": 0.11
+    }
+}

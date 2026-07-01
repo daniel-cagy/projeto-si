@@ -1,0 +1,11 @@
+{
+    "imagens": ["smartwatch1.jpg",
+                "smartwatch2.jpg"],
+    "descricao": "Smartwatch PEJE water proof com 2 pulseiras",
+    "resultado_esperado": {
+        "comprimento": 16.1,
+        "largura": 11,
+        "altura": 3.2,
+        "peso": 0.18
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "imagens": ["game_dois_discos1.jpg",
+                "game_dois_discos2.jpg"],
+    "descricao": "The Last of Us Part II ps4 original midia fisica",
+    "resultado_esperado": {
+        "comprimento": 17.1,
+        "largura": 13.5,
+        "altura": 1.5,
+        "peso": 0.11
+    }
+}

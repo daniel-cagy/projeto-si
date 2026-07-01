@@ -1,0 +1,11 @@
+{
+    "imagens": ["pasta1.jpg",
+                "pasta2.jpg"],
+    "descricao": "Pasta de dente colgate",
+    "resultado_esperado": {
+        "comprimento": 16.7,
+        "largura": 3.8,
+        "altura": 3.2,
+        "peso": 0.1
+    }
+}

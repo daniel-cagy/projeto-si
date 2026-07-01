@@ -1,0 +1,11 @@
+{
+    "imagens": ["livro_maior1.jpg",
+                "livro_maior2.jpg"],
+    "descricao": "Algebra Linear Contemporanea Anton e Busby",
+    "resultado_esperado": {
+        "comprimento": 27.8,
+        "largura": 21,
+        "altura": 3.5,
+        "peso": 1.44
+    }
+}

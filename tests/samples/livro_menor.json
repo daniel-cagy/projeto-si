@@ -1,0 +1,11 @@
+{
+    "imagens": ["livro_menor1.jpg",
+                "livro_menor2.jpg"],
+    "descricao": "Uma breve historia do tempo de Stephen Hawking",
+    "resultado_esperado": {
+        "comprimento": 22.8,
+        "largura": 16,
+        "altura": 1.4,
+        "peso": 0.35
+    }
+}

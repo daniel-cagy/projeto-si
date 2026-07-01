@@ -1,0 +1,11 @@
+{
+    "imagens": ["barra1.jpg",
+                "barra2.jpg"],
+    "descricao": "Barras de beleza Dove 6 unidades",
+    "resultado_esperado": {
+        "comprimento": 18,
+        "largura": 8.1,
+        "altura": 6.3,
+        "peso": 0.58
+    }
+}

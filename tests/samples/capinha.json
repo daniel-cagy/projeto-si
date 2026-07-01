@@ -1,0 +1,11 @@
+{
+    "imagens": ["capinha1.jpg",
+                "capinha2.jpg"],
+    "descricao": "Capinha branca para celular Samsung Galaxy S21 FE",
+    "resultado_esperado": {
+        "comprimento": 20,
+        "largura": 10,
+        "altura": 1.2,
+        "peso": 0.03
+    }
+}

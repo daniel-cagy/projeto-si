@@ -1,0 +1,11 @@
+{
+    "imagens": ["baralho1.jpg",
+                "baralho2.jpg"],
+    "descricao": "Baralho de Cartas Royal JYK",
+    "resultado_esperado": {
+        "comprimento": 12.3,
+        "largura": 9.5,
+        "altura": 2,
+        "peso": 0.2
+    }
+}
