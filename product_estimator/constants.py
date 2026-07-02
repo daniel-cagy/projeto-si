@@ -7,7 +7,7 @@ MODEL_TEMPERATURE = 0.0
 
 
 DIMENSION_INTERVAL_CALIBRATION_MULTIPLIER = 1.64
-WEIGHT_INTERVAL_CALIBRATION_MULTIPLIER = 1.64
+WEIGHT_INTERVAL_CALIBRATION_MULTIPLIER = 1.96
 MIN_DIMENSION_RANGE_VALUE_CM = 0.1
 MIN_WEIGHT_RANGE_VALUE_KG = 0.001
 MIN_DIMENSION_DISPLAY_VALUE_CM = 1
@@ -15,14 +15,14 @@ MIN_WEIGHT_DISPLAY_VALUE_KG = 0.01
 DIMENSION_DISPLAY_DECIMAL_PLACES = 1
 WEIGHT_DISPLAY_DECIMAL_PLACES = 2
 DIMENSION_INTERVAL_CALIBRATION = {
-    "comprimento": {"bias": 0.5350, "std": 1.6146},
-    "largura": {"bias": -0.0913, "std": 1.9883},
-    "altura": {"bias": 0.2506, "std": 0.6066},
+    "comprimento": {"bias": 0.3905, "std": 1.9992},
+    "largura": {"bias": 0.2189, "std": 2.1121},
+    "altura": {"bias": 0.5584, "std": 1.3819},
 }
 WEIGHT_INTERVAL_CALIBRATION = (
-    {"class": "leve", "max_estimate_kg": 0.1, "bias": 0.0114, "std": 0.0245},
-    {"class": "medio", "max_estimate_kg": 0.5, "bias": 0.0602, "std": 0.0418},
-    {"class": "pesado", "max_estimate_kg": None, "bias": 0.1500, "std": 0.1158},
+    {"class": "leve", "max_estimate_kg": 0.1, "bias": 0.0024, "std": 0.0244},
+    {"class": "medio", "max_estimate_kg": 0.5, "bias": 0.0339, "std": 0.0790},
+    {"class": "pesado", "max_estimate_kg": None, "bias": 0.3431, "std": 0.6567},
 )
 
 
