@@ -4,208 +4,249 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cubage AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/styles.css" />
-
 </head>
 <body>
+  <div class="aurora" aria-hidden="true">
+    <div class="grid"></div>
+  </div>
 
-  <!-- Header -->
-  <header>
-    <div class="logo-mark">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" fill="white" opacity=".9"/>
-        <path d="M10 5.5L14.5 8V13L10 15.5L5.5 13V8L10 5.5Z" fill="#00A868"/>
-      </svg>
-    </div>
-    <div class="logo-text">
-      <span>Cubage AI</span>
-    </div>
-    <span class="badge">Beta</span>
-  </header>
-
-  <!-- Main -->
-  <main>
-    <div class="card">
-
-      <div class="card-header">
-        <h1>Identificação de Produto por IA</h1>
-        <p>Envie uma foto e descreva o produto. Nossa IA irá identificá-lo e calcular a cubagem automaticamente.</p>
-      </div>
-
-      <!-- Steps -->
-      <div class="steps">
-        <div class="step active">
-          <div class="step-num">1</div>
-          Foto
+  <div class="shell">
+    <aside class="sidebar" aria-label="Progresso da análise">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" fill="#04120C" opacity=".85" />
+            <path d="M10 5.5L14.5 8V13L10 15.5L5.5 13V8L10 5.5Z" fill="#00E38C" />
+          </svg>
         </div>
-        <div class="step-divider"></div>
-        <div class="step active">
-          <div class="step-num">2</div>
-          Descrição
-        </div>
-        <div class="step-divider"></div>
-        <div class="step" id="step-3">
-          <div class="step-num">3</div>
-          Resultado
+        <div class="brand-text">
+          <b>Cubage AI</b>
+          <small>Estimativa logística</small>
         </div>
       </div>
 
-      <form id="cubage-form" novalidate>
-
-        <!-- Upload -->
-        <div class="field">
-          <label>Fotos do produto <span>*</span></label>
-          <div class="dropzone" id="dropzone">
-            <input type="file" id="file-input" accept="image/*" multiple />
-            <div class="dropzone-icon">
-              <svg width="22" height="22" fill="none" stroke="#6B7A8D" stroke-width="1.8" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="3"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <path d="M21 15l-5-5L5 21"/>
-              </svg>
-            </div>
-            <p><strong>Clique para selecionar</strong> ou arraste as imagens aqui</p>
-            <small>PNG, JPG, WEBP — até 3 imagens, máx. 10 MB por imagem</small>
-          </div>
-
-          <div id="preview-wrap">
-            <div id="preview-list"></div>
-            <button type="button" class="remove-btn" id="remove-btn">✕ Remover imagens</button>
+      <div class="rail">
+        <div class="rail-item done">
+          <span class="fill"></span>
+          <div class="rail-dot step-num">1</div>
+          <div class="rail-info">
+            <b>Fotos</b>
+            <small>Envie até três imagens do produto.</small>
           </div>
         </div>
-
-        <hr class="divider" />
-
-        <!-- Description -->
-        <div class="field">
-          <label>Descrição do produto <span>*</span></label>
-          <textarea
-            id="description"
-            placeholder="Ex: Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada..."
-            maxlength="500"
-          ></textarea>
-          <div class="char-count"><span id="char-num">0</span> / 500</div>
+        <div class="rail-item active">
+          <span class="fill"></span>
+          <div class="rail-dot step-num">2</div>
+          <div class="rail-info">
+            <b>Dados</b>
+            <small>Informe descrição e medidas conhecidas.</small>
+          </div>
         </div>
-
-        <!-- Known measures -->
-        <div class="field known-measures-field">
-          <label>Medidas conhecidas</label>
-          <div class="known-measures-list" id="known-measures-list"></div>
-          <button type="button" class="add-measure-btn" id="add-known-measure-btn">
-            + Adicionar medida conhecida
-          </button>
+        <div class="rail-item" id="step-3">
+          <span class="fill"></span>
+          <div class="rail-dot step-num">3</div>
+          <div class="rail-info">
+            <b>Resultado</b>
+            <small>Revise dimensões, peso e cubagem.</small>
+          </div>
         </div>
+      </div>
 
-        <!-- Advanced settings -->
-        <div class="field advanced-settings-field">
-          <details class="advanced-settings">
-            <summary>Configurações avançadas</summary>
-            <div class="advanced-settings-content">
-              <div class="advanced-settings-inner">
-                <div class="advanced-settings-group">
-                  <div class="advanced-settings-group-title">Modelo de IA</div>
-                  <div class="model-selector">
-                    <select id="model-preset" aria-label="Modelo sugerido">
-                      <option value="gpt-5.4-mini" selected>gpt-5.4-mini</option>
-                      <option value="gpt-5.4">gpt-5.4</option>
-                      <option value="gpt-5.4-nano">gpt-5.4-nano</option>
-                      <option value="gpt-5.5">gpt-5.5</option>
-                      <option value="gpt-4o">gpt-4o</option>
-                      <option value="gpt-4o-mini">gpt-4o-mini</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                    <input
-                      type="text"
-                      id="model-input"
-                      value="gpt-5.4-mini"
-                      autocomplete="off"
-                      spellcheck="false"
-                      aria-label="Nome do modelo"
-                    />
-                  </div>
-                </div>
+      <div class="tip">
+        <b>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.5 1 2.5h6c0-1 .3-1.9 1-2.5A6 6 0 0 0 12 3z" />
+          </svg>
+          Dica
+        </b>
+        <p>Fotos com boa iluminação e ângulos diferentes ajudam a estimar altura e profundidade com mais estabilidade.</p>
+      </div>
+    </aside>
 
-                <div class="advanced-settings-group">
-                  <div class="advanced-settings-group-title">Fator de cubagem</div>
-                  <div class="cubage-factor-selector">
-                    <select id="cubage-factor-preset" aria-label="Fator de cubagem sugerido">
-                      <option value="6000" selected>6000 · padrão</option>
-                      <option value="5000">5000</option>
-                      <option value="4000">4000</option>
-                      <option value="3000">3000</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                    <input
-                      type="number"
-                      id="cubage-factor-input"
-                      value="6000"
-                      min="1"
-                      step="1"
-                      inputmode="numeric"
-                      aria-label="Fator de cubagem"
-                    />
-                  </div>
-                </div>
+    <div class="stage">
+      <div class="stage-top">
+        <span class="crumb">Cubagem inteligente <em>/</em> análise de produto</span>
+        <span class="status-pill">Sistema online</span>
+      </div>
 
-                <div class="advanced-settings-group">
-                  <div class="advanced-settings-group-title">Tratamento da imagem</div>
-                  <div class="processing-options" role="radiogroup" aria-label="Tratamento da imagem">
-                    <label class="processing-option">
-                      <input type="radio" name="image-processing-mode" value="original" />
-                      <span>Original</span>
-                    </label>
-                    <label class="processing-option">
-                      <input type="radio" name="image-processing-mode" value="resized" />
-                      <span>Redimensionada</span>
-                    </label>
-                    <label class="processing-option">
-                      <input type="radio" name="image-processing-mode" value="quantized" checked />
-                      <span>Quantizada</span>
-                    </label>
-                  </div>
+      <main class="workspace">
+        <section class="panel-card form-card" aria-labelledby="form-title">
+          <div class="panel-head">
+            <span class="kicker">Entrada do produto</span>
+            <h1 id="form-title">Identificação de Produto por IA</h1>
+            <p>Envie fotos, descreva o item e ajuste as configurações para estimar dimensões, peso e peso cubado.</p>
+          </div>
+
+          <form id="cubage-form" novalidate>
+            <div class="field">
+              <label>Fotos do produto <span>*</span></label>
+              <div class="dropzone" id="dropzone">
+                <input type="file" id="file-input" accept="image/*" multiple />
+                <div class="dropzone-icon">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
                 </div>
+                <p><strong>Clique para selecionar</strong> ou arraste as imagens aqui</p>
+                <small>PNG, JPG, WEBP · até 3 imagens · máx. 10 MB por imagem</small>
+              </div>
+
+              <div id="preview-wrap">
+                <div id="preview-list"></div>
+                <button type="button" class="remove-btn" id="remove-btn">Remover imagens</button>
               </div>
             </div>
-          </details>
-        </div>
 
-        <!-- Submit -->
-        <button type="submit" class="submit-btn" id="submit-btn" disabled>
-          <div class="spinner" id="spinner"></div>
-          <svg id="btn-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z" stroke-opacity=".3"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-          <span id="btn-label">Analisar produto</span>
-        </button>
+            <hr class="divider" />
 
-      </form>
+            <div class="field">
+              <label>Descrição do produto <span>*</span></label>
+              <textarea
+                id="description"
+                placeholder="Ex: Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada..."
+                maxlength="500"
+              ></textarea>
+              <div class="char-count"><span id="char-num">0</span> / 500</div>
+            </div>
 
-      <!-- Result -->
-      <div id="result">
-        <div class="result-title">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path d="M20 6L9 17l-5-5"/>
-          </svg>
-          Resultado da análise
-        </div>
-        <div class="result-body" id="result-body">—</div>
-        <div class="export-actions" id="export-actions" hidden>
-          <button type="button" class="export-btn" id="export-json-btn">Baixar JSON</button>
-          <button type="button" class="export-btn" id="export-csv-btn">Baixar CSV</button>
-        </div>
-      </div>
+            <div class="field known-measures-field">
+              <label>Medidas conhecidas</label>
+              <div class="known-measures-list" id="known-measures-list"></div>
+              <button type="button" class="add-measure-btn" id="add-known-measure-btn">
+                + Adicionar medida conhecida
+              </button>
+            </div>
 
+            <div class="field advanced-settings-field">
+              <details class="advanced-settings">
+                <summary>Configurações avançadas</summary>
+                <div class="advanced-settings-content">
+                  <div class="advanced-settings-inner">
+                    <div class="advanced-settings-group">
+                      <div class="advanced-settings-group-title">Modelo de IA</div>
+                      <div class="model-selector">
+                        <select id="model-preset" aria-label="Modelo sugerido">
+                          <option value="gpt-5.4-mini" selected>gpt-5.4-mini</option>
+                          <option value="gpt-5.4">gpt-5.4</option>
+                          <option value="gpt-5.4-nano">gpt-5.4-nano</option>
+                          <option value="gpt-5.5">gpt-5.5</option>
+                          <option value="gpt-4o">gpt-4o</option>
+                          <option value="gpt-4o-mini">gpt-4o-mini</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                        <input
+                          type="text"
+                          id="model-input"
+                          value="gpt-5.4-mini"
+                          autocomplete="off"
+                          spellcheck="false"
+                          aria-label="Nome do modelo"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="advanced-settings-group">
+                      <div class="advanced-settings-group-title">Fator de cubagem</div>
+                      <div class="cubage-factor-selector">
+                        <select id="cubage-factor-preset" aria-label="Fator de cubagem sugerido">
+                          <option value="6000" selected>6000 · padrão</option>
+                          <option value="5000">5000</option>
+                          <option value="4000">4000</option>
+                          <option value="3000">3000</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                        <input
+                          type="number"
+                          id="cubage-factor-input"
+                          value="6000"
+                          min="1"
+                          step="1"
+                          inputmode="numeric"
+                          aria-label="Fator de cubagem"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="advanced-settings-group">
+                      <div class="advanced-settings-group-title">Tratamento da imagem</div>
+                      <div class="processing-options" role="radiogroup" aria-label="Tratamento da imagem">
+                        <label class="processing-option">
+                          <input type="radio" name="image-processing-mode" value="original" />
+                          <span>Original</span>
+                        </label>
+                        <label class="processing-option">
+                          <input type="radio" name="image-processing-mode" value="resized" />
+                          <span>Redimensionada</span>
+                        </label>
+                        <label class="processing-option">
+                          <input type="radio" name="image-processing-mode" value="quantized" checked />
+                          <span>Quantizada</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+              <div class="spinner" id="spinner"></div>
+              <svg id="btn-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z" stroke-opacity=".3" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span id="btn-label">Analisar produto</span>
+            </button>
+          </form>
+        </section>
+
+        <section class="panel-card result-card" aria-live="polite">
+          <div class="panel-head result-head">
+            <span class="kicker">Saída logística</span>
+            <h2>Resultado da análise</h2>
+            <p>As estimativas aparecerão aqui após o processamento. Você poderá exportar os dados ou ajustar manualmente uma medida.</p>
+          </div>
+
+          <div id="result">
+            <div class="result-title">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              Resultado da análise
+            </div>
+            <div class="result-body" id="result-body">—</div>
+            <div class="export-actions" id="export-actions" hidden>
+              <button type="button" class="export-btn" id="export-json-btn">Baixar JSON</button>
+              <button type="button" class="export-btn" id="export-csv-btn">Baixar CSV</button>
+            </div>
+          </div>
+
+          <div class="empty-result" id="empty-result">
+            <div class="empty-result-icon">
+              <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <path d="M3.27 6.96 12 12.01l8.73-5.05" />
+                <path d="M12 22.08V12" />
+              </svg>
+            </div>
+            <b>Aguardando análise</b>
+            <p>Preencha os dados do produto e envie para gerar dimensões, peso estimado e métricas de cubagem.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        Feito por Daniel Cagy, Evandro Ichiro, Felipe Klein e Luiz Jose.
+      </footer>
     </div>
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    Feito por Daniel Cagy, Evandro Ichiro, Felipe Klein e Luiz Jose.
-  </footer>
+  </div>
 
   <script type="module" src="/static/app.js"></script>
-
-
 </body>
 </html>
