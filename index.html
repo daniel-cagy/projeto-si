@@ -6,390 +6,490 @@
   <title>Stone · Cubage AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green:        #00A868;
-      --green-bright: #00C87D;
-      --green-dark:   #007A4C;
-      --green-deep:   #043D2B;
-      --green-light:  #E6F7F1;
-      --ink:          #0C1B14;
-      --text:         #16241D;
-      --muted:        #5E7268;
-      --faint:        #93A69C;
-      --surface:      #FFFFFF;
-      --border:       #E3EAE6;
-      --radius:       16px;
-      --font-body:    'Inter', system-ui, sans-serif;
-      --font-display: 'Sora', 'Inter', system-ui, sans-serif;
+      --bg-0:        #04120C;
+      --bg-1:        #06231A;
+      --bg-2:        #0A3326;
+      --emerald:     #00E38C;
+      --green:       #00A868;
+      --green-dark:  #007A4C;
+      --glass:       rgba(16, 62, 45, .38);
+      --glass-brd:   rgba(0, 227, 140, .16);
+      --text:        #EAF7F0;
+      --muted:       #8FB3A3;
+      --faint:       #567467;
+      --danger:      #FF6B6B;
+      --radius:      18px;
+      --font-body:   'Inter', system-ui, sans-serif;
+      --font-disp:   'Sora', 'Inter', system-ui, sans-serif;
     }
+
+    html, body { height: 100%; }
 
     body {
       font-family: var(--font-body);
       color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background:
-        radial-gradient(ellipse 900px 550px at 85% -10%, rgba(0,200,125,.22), transparent 60%),
-        radial-gradient(ellipse 700px 500px at -10% 110%, rgba(0,168,104,.16), transparent 60%),
-        linear-gradient(165deg, #05221715 0%, transparent 40%),
-        #F2F6F4;
-      background-attachment: fixed;
+      background: var(--bg-0);
+      overflow-x: hidden;
     }
 
-    /* Subtle dot grid overlay */
-    body::before {
-      content: '';
+    /* ═══ Animated aurora background ═══ */
+    .aurora {
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(rgba(4,61,43,.07) 1px, transparent 1px);
-      background-size: 26px 26px;
-      pointer-events: none;
       z-index: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 115%, #0A3B2A 0%, transparent 60%),
+        linear-gradient(180deg, #04120C 0%, #061E16 55%, #07271D 100%);
     }
 
-    /* ── Header ── */
-    header {
+    .aurora::before, .aurora::after {
+      content: '';
+      position: absolute;
+      width: 60vw;
+      height: 60vw;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .5;
+    }
+
+    .aurora::before {
+      background: radial-gradient(circle, rgba(0,227,140,.28), transparent 65%);
+      top: -25vw;
+      right: -18vw;
+      animation: drift1 16s ease-in-out infinite alternate;
+    }
+
+    .aurora::after {
+      background: radial-gradient(circle, rgba(0,168,104,.22), transparent 65%);
+      bottom: -30vw;
+      left: -20vw;
+      animation: drift2 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift1 {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(-8vw, 6vw) scale(1.15); }
+    }
+    @keyframes drift2 {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(7vw, -5vw) scale(1.1); }
+    }
+
+    /* Hex-ish grid overlay */
+    .aurora .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,227,140,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,227,140,.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 35%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 35%, transparent 80%);
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--emerald);
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(0) scale(.6); }
+      12%  { opacity: .55; }
+      88%  { opacity: .35; }
+      100% { opacity: 0; transform: translateY(-105vh) scale(1.1); }
+    }
+
+    /* ═══ App shell ═══ */
+    .shell {
       position: relative;
-      z-index: 2;
-      padding: 0 clamp(20px, 5vw, 48px);
-      height: 72px;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+    }
+
+    /* ═══ Sidebar ═══ */
+    aside {
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(0,227,140,.10);
+      background: linear-gradient(180deg, rgba(4,20,14,.55), rgba(4,20,14,.25));
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(4,61,43,.08);
+      gap: 13px;
+      margin-bottom: 52px;
     }
 
-    .logo-mark {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--green-bright), var(--green-dark));
-      border-radius: 11px;
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--emerald), var(--green-dark));
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 16px rgba(0,168,104,.35), inset 0 1px 0 rgba(255,255,255,.3);
+      box-shadow: 0 0 26px rgba(0,227,140,.35), inset 0 1px 0 rgba(255,255,255,.3);
     }
 
-    .logo-text { display: flex; flex-direction: column; line-height: 1.15; }
+    .brand-text { line-height: 1.15; }
 
-    .logo-text span:first-child {
-      font-family: var(--font-display);
-      font-size: 16px;
+    .brand-text b {
+      font-family: var(--font-disp);
+      font-size: 17px;
       font-weight: 800;
       letter-spacing: -.4px;
-      color: var(--ink);
+      display: block;
     }
 
-    .logo-text span:last-child {
+    .brand-text small {
       font-size: 10.5px;
-      color: var(--muted);
       font-weight: 600;
-      letter-spacing: 1.6px;
+      letter-spacing: 2px;
       text-transform: uppercase;
+      color: var(--emerald);
     }
 
-    .badge {
-      margin-left: auto;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, rgba(0,200,125,.14), rgba(0,168,104,.08));
-      border: 1px solid rgba(0,168,104,.3);
-      color: var(--green-dark);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 13px;
-      border-radius: 100px;
-      letter-spacing: .6px;
-      text-transform: uppercase;
-    }
+    /* Vertical stepper */
+    .rail { flex: 1; }
 
-    .badge::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 0 3px rgba(0,168,104,.18);
-      animation: pulse 2.4s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 3px rgba(0,168,104,.18); }
-      50%      { box-shadow: 0 0 0 6px rgba(0,168,104,.05); }
-    }
-
-    /* ── Main ── */
-    main {
+    .rail-item {
       position: relative;
-      z-index: 1;
-      flex: 1;
+      display: flex;
+      gap: 16px;
+      padding-bottom: 42px;
+    }
+
+    .rail-item:last-child { padding-bottom: 0; }
+
+    .rail-item::before {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 38px;
+      bottom: 4px;
+      width: 2px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .rail-item:last-child::before { display: none; }
+
+    .rail-item .fill {
+      position: absolute;
+      left: 17px;
+      top: 38px;
+      bottom: 4px;
+      width: 2px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--emerald), var(--green));
+      transform: scaleY(0);
+      transform-origin: top;
+      transition: transform .6s cubic-bezier(.22,1,.36,1);
+    }
+
+    .rail-item.done .fill { transform: scaleY(1); }
+
+    .rail-dot {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--faint);
+      font-family: var(--font-disp);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .4s cubic-bezier(.22,1,.36,1);
+    }
+
+    .rail-item.active .rail-dot {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--emerald), var(--green-dark));
+      color: #04120C;
+      box-shadow: 0 0 20px rgba(0,227,140,.45);
+      transform: scale(1.08);
+    }
+
+    .rail-item.done .rail-dot {
+      border-color: rgba(0,227,140,.5);
+      background: rgba(0,227,140,.12);
+      color: var(--emerald);
+    }
+
+    .rail-info { padding-top: 2px; }
+
+    .rail-info b {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--faint);
+      transition: color .3s;
+      letter-spacing: -.1px;
+    }
+
+    .rail-info small {
+      font-size: 12px;
+      color: var(--faint);
+      opacity: .7;
+      line-height: 1.5;
+      display: block;
+      margin-top: 3px;
+      transition: opacity .3s;
+    }
+
+    .rail-item.active .rail-info b { color: var(--text); }
+    .rail-item.active .rail-info small { opacity: 1; color: var(--muted); }
+    .rail-item.done .rail-info b { color: var(--muted); }
+
+    /* Sidebar tip card */
+    .tip {
+      margin-top: 34px;
+      border: 1px solid var(--glass-brd);
+      background: var(--glass);
+      border-radius: 14px;
+      padding: 16px 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .tip b {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .tip p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+
+    /* ═══ Stage (right side) ═══ */
+    .stage {
       display: flex;
       flex-direction: column;
+      padding: clamp(24px, 4vw, 56px);
+      min-height: 100vh;
+    }
+
+    .stage-top {
+      display: flex;
       align-items: center;
-      padding: clamp(36px, 6vw, 64px) 24px 80px;
+      justify-content: space-between;
+      margin-bottom: clamp(20px, 3.5vh, 40px);
     }
 
-    /* ── Hero ── */
-    .hero {
-      text-align: center;
-      max-width: 560px;
-      margin-bottom: 40px;
-      animation: rise .7s cubic-bezier(.22,1,.36,1) both;
+    .stage-top .crumb {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .2px;
     }
 
-    .hero-tag {
+    .stage-top .crumb em {
+      font-style: normal;
+      color: var(--emerald);
+    }
+
+    .status-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      letter-spacing: 1.4px;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      color: var(--green-dark);
-      background: rgba(255,255,255,.7);
-      border: 1px solid rgba(0,168,104,.25);
-      padding: 7px 16px;
+      color: var(--emerald);
+      border: 1px solid rgba(0,227,140,.3);
+      background: rgba(0,227,140,.08);
+      padding: 6px 14px;
       border-radius: 100px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(4,61,43,.06);
     }
 
-    .hero h1 {
-      font-family: var(--font-display);
-      font-size: clamp(28px, 4.5vw, 40px);
-      font-weight: 800;
-      letter-spacing: -1.2px;
-      line-height: 1.12;
-      color: var(--ink);
+    .status-pill::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      animation: blink 2s ease-in-out infinite;
     }
 
-    .hero h1 em {
-      font-style: normal;
-      background: linear-gradient(100deg, var(--green-dark), var(--green-bright));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+    @keyframes blink {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,227,140,.5); }
+      50%      { box-shadow: 0 0 0 6px rgba(0,227,140,0); }
     }
 
-    .hero p {
-      margin-top: 14px;
-      font-size: 15.5px;
+    /* Panels */
+    .panels {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      opacity: 0;
+      transform: translateX(46px);
+      pointer-events: none;
+      transition: opacity .45s cubic-bezier(.22,1,.36,1), transform .45s cubic-bezier(.22,1,.36,1);
+    }
+
+    .panel.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .panel.exit-left { transform: translateX(-46px); }
+
+    .panel-card {
+      width: 100%;
+      max-width: 620px;
+      background: var(--glass);
+      border: 1px solid var(--glass-brd);
+      border-radius: 24px;
+      padding: clamp(26px, 4vw, 42px);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      box-shadow: 0 30px 80px -30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    .panel-head { margin-bottom: 28px; }
+
+    .panel-head .kicker {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--emerald);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .panel-head h2 {
+      font-family: var(--font-disp);
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 700;
+      letter-spacing: -.6px;
+      line-height: 1.2;
+    }
+
+    .panel-head p {
+      margin-top: 10px;
+      font-size: 14px;
       color: var(--muted);
       line-height: 1.65;
     }
 
-    /* ── Card ── */
-    .card {
-      width: 100%;
-      max-width: 660px;
-      background: rgba(255,255,255,.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.9);
-      border-radius: 24px;
-      box-shadow:
-        0 1px 2px rgba(4,61,43,.05),
-        0 12px 40px rgba(4,61,43,.10),
-        0 40px 90px -30px rgba(4,61,43,.22);
-      padding: clamp(28px, 5vw, 44px);
-      animation: rise .7s cubic-bezier(.22,1,.36,1) .12s both;
-    }
-
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Steps ── */
-    .steps {
-      display: flex;
-      align-items: center;
-      margin-bottom: 36px;
-    }
-
-    .step {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--faint);
-      transition: color .3s;
-    }
-
-    .step .step-num {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #EDF2EF;
-      border: 1.5px solid var(--border);
-      color: var(--faint);
-      font-size: 12.5px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .35s cubic-bezier(.22,1,.36,1);
-    }
-
-    .step.active { color: var(--green-dark); }
-
-    .step.active .step-num {
-      background: linear-gradient(135deg, var(--green-bright), var(--green-dark));
-      border-color: transparent;
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(0,168,104,.35);
-    }
-
-    .step-divider {
-      flex: 1;
-      height: 2px;
-      margin: 0 14px;
-      border-radius: 2px;
-      background: var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .step-divider::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, var(--green-bright), var(--green));
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform .6s cubic-bezier(.22,1,.36,1);
-    }
-
-    .step-divider.filled::after { transform: scaleX(1); }
-
-    /* ── Fields ── */
-    .field { margin-bottom: 26px; }
-
-    .field-label {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .field-label label {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--ink);
-      letter-spacing: -.1px;
-    }
-
-    .field-label label span { color: var(--green); margin-left: 3px; }
-
-    .field-label small {
-      font-size: 11.5px;
-      color: var(--faint);
-      font-weight: 500;
-    }
-
-    /* ── Dropzone ── */
+    /* ═══ Dropzone ═══ */
     .dropzone {
       position: relative;
-      border: 1.5px dashed rgba(0,168,104,.35);
+      border: 1.5px dashed rgba(0,227,140,.35);
       border-radius: var(--radius);
-      background:
-        linear-gradient(180deg, rgba(0,200,125,.04), rgba(0,168,104,.02));
-      padding: 40px 24px;
+      background: rgba(0,227,140,.04);
+      padding: 46px 24px;
       text-align: center;
       cursor: pointer;
-      transition: all .25s ease;
       overflow: hidden;
+      transition: all .25s ease;
     }
 
-    .dropzone::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle 260px at var(--mx, 50%) var(--my, 50%), rgba(0,200,125,.10), transparent 70%);
-      opacity: 0;
-      transition: opacity .3s;
-      pointer-events: none;
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--emerald);
+      background: rgba(0,227,140,.09);
+      box-shadow: 0 0 40px -8px rgba(0,227,140,.25) inset;
     }
 
-    .dropzone:hover::before { opacity: 1; }
-
-    .dropzone:hover,
-    .dropzone.drag-over {
-      border-color: var(--green);
-      background: linear-gradient(180deg, rgba(0,200,125,.09), rgba(0,168,104,.04));
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px -8px rgba(0,168,104,.25);
-    }
-
-    .dropzone.drag-over { border-style: solid; }
+    .dropzone.drag-over { border-style: solid; transform: scale(1.01); }
 
     .dropzone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      z-index: 2;
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
     }
 
-    .dropzone-icon {
-      width: 58px;
-      height: 58px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
+    .dz-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(0,227,140,.18), rgba(0,122,76,.18));
+      border: 1px solid rgba(0,227,140,.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px;
-      box-shadow: 0 4px 14px rgba(4,61,43,.10), inset 0 1px 0 #fff;
       transition: transform .3s cubic-bezier(.22,1,.36,1);
     }
 
-    .dropzone:hover .dropzone-icon { transform: translateY(-3px) scale(1.05); }
+    .dropzone:hover .dz-icon { transform: translateY(-4px) rotate(-4deg); }
 
-    .dropzone p { font-size: 14.5px; color: var(--muted); line-height: 1.6; }
-    .dropzone p strong { color: var(--green-dark); font-weight: 700; }
+    .dropzone p { font-size: 14.5px; color: var(--muted); }
+    .dropzone p b { color: var(--emerald); font-weight: 700; }
 
-    .dropzone small {
-      display: inline-block;
-      margin-top: 10px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--faint);
-      background: #fff;
-      border: 1px solid var(--border);
-      padding: 4px 12px;
-      border-radius: 100px;
+    .dropzone .formats {
+      display: inline-flex;
+      gap: 6px;
+      margin-top: 14px;
     }
 
-    /* ── Preview ── */
+    .formats span {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      padding: 4px 10px;
+      border-radius: 7px;
+    }
+
+    /* Preview */
     #preview-wrap {
       display: none;
       position: relative;
       border-radius: var(--radius);
       overflow: hidden;
-      border: 1px solid var(--border);
-      box-shadow: 0 8px 28px -8px rgba(4,61,43,.25);
-      animation: rise .45s cubic-bezier(.22,1,.36,1) both;
+      border: 1px solid rgba(0,227,140,.3);
+      box-shadow: 0 20px 50px -18px rgba(0,0,0,.65);
+      animation: pop .45s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: scale(.96) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     #preview-wrap img {
       width: 100%;
-      max-height: 250px;
+      max-height: 280px;
       object-fit: cover;
       display: block;
     }
@@ -398,388 +498,745 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, transparent 55%, rgba(6,27,19,.55));
+      background: linear-gradient(180deg, transparent 50%, rgba(4,18,12,.75));
       pointer-events: none;
     }
 
     .preview-meta {
       position: absolute;
-      left: 14px;
-      bottom: 12px;
+      left: 16px;
+      bottom: 14px;
       z-index: 2;
-      color: #fff;
-      font-size: 12.5px;
-      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
-      text-shadow: 0 1px 4px rgba(0,0,0,.4);
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     .preview-meta .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green-bright);
-      box-shadow: 0 0 8px var(--green-bright);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
     }
 
     .remove-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 12px; right: 12px;
       z-index: 2;
-      background: rgba(12,27,20,.55);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.25);
-      border-radius: 9px;
+      background: rgba(4,18,12,.6);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 10px;
       font-family: inherit;
       font-size: 12px;
       font-weight: 600;
-      padding: 6px 12px;
+      padding: 7px 13px;
       cursor: pointer;
       backdrop-filter: blur(8px);
       transition: all .2s;
     }
 
-    .remove-btn:hover {
-      background: rgba(229,62,62,.9);
-      border-color: transparent;
-    }
+    .remove-btn:hover { background: rgba(255,107,107,.85); border-color: transparent; }
 
-    /* ── Textarea ── */
-    .field textarea {
+    /* ═══ Textarea + chips ═══ */
+    textarea {
       width: 100%;
-      min-height: 118px;
+      min-height: 130px;
       resize: vertical;
-      border: 1.5px solid var(--border);
+      border: 1.5px solid rgba(255,255,255,.12);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 15px 17px;
       font-family: inherit;
       font-size: 14.5px;
       color: var(--text);
-      background: #FBFDFC;
+      background: rgba(4,18,12,.45);
       outline: none;
       line-height: 1.65;
-      transition: border-color .2s, box-shadow .2s, background .2s;
+      transition: border-color .2s, box-shadow .2s;
     }
 
-    .field textarea::placeholder { color: #A9BAB1; }
+    textarea::placeholder { color: var(--faint); }
 
-    .field textarea:focus {
-      border-color: var(--green);
-      background: #fff;
-      box-shadow: 0 0 0 4px rgba(0,168,104,.12);
+    textarea:focus {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 4px rgba(0,227,140,.12);
     }
 
-    /* ── Submit ── */
-    .submit-btn {
-      position: relative;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, var(--green-bright) 0%, var(--green) 45%, var(--green-dark) 100%);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-family: inherit;
-      font-size: 15.5px;
-      font-weight: 700;
-      letter-spacing: -.1px;
-      cursor: pointer;
+    .char-row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      overflow: hidden;
-      transition: transform .15s, box-shadow .25s, filter .25s;
-      box-shadow: 0 8px 22px -6px rgba(0,168,104,.55), inset 0 1px 0 rgba(255,255,255,.25);
+      margin-top: 8px;
+      font-size: 11.5px;
+      color: var(--faint);
+      font-weight: 600;
     }
 
-    .submit-btn::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -80%;
-      width: 50%;
-      height: 100%;
-      background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
-      transform: skewX(-20deg);
-      transition: left .6s ease;
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
     }
 
-    .submit-btn:hover:not(:disabled)::after { left: 130%; }
+    .chips-label {
+      width: 100%;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 2px;
+    }
 
-    .submit-btn:hover:not(:disabled) {
-      filter: brightness(1.06);
-      box-shadow: 0 12px 30px -6px rgba(0,168,104,.65), inset 0 1px 0 rgba(255,255,255,.25);
+    .chip {
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 7px 14px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .chip:hover {
+      color: var(--emerald);
+      border-color: rgba(0,227,140,.45);
+      background: rgba(0,227,140,.08);
       transform: translateY(-1px);
     }
 
-    .submit-btn:active:not(:disabled) { transform: translateY(0) scale(.985); }
-
-    .submit-btn:disabled {
-      background: #E4EAE7;
-      color: #9FAFA6;
-      box-shadow: none;
-      cursor: not-allowed;
+    /* ═══ Review step ═══ */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 20px;
+      align-items: start;
     }
 
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid rgba(255,255,255,.35);
-      border-top-color: #fff;
+    .review-thumb {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(0,227,140,.3);
+      aspect-ratio: 1;
+      background: rgba(4,18,12,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .review-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .review-thumb .empty { font-size: 12px; color: var(--faint); }
+
+    .review-box {
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(4,18,12,.4);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+
+    .review-box b {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .review-box p {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+      word-break: break-word;
+    }
+
+    .review-edit {
+      margin-top: 12px;
+      background: none;
+      border: none;
+      color: var(--emerald);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      letter-spacing: .2px;
+    }
+
+    .review-edit:hover { text-decoration: underline; }
+
+    /* ═══ Analysis / scanner ═══ */
+    .scanner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 26px 0 10px;
+    }
+
+    .scan-ring {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin-bottom: 28px;
+    }
+
+    .scan-ring .orbit {
+      position: absolute;
+      inset: 0;
       border-radius: 50%;
-      animation: spin .7s linear infinite;
-      display: none;
+      border: 2px solid rgba(0,227,140,.15);
+    }
+
+    .scan-ring .sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--emerald);
+      animation: spin 1.1s linear infinite;
+      filter: drop-shadow(0 0 8px rgba(0,227,140,.6));
+    }
+
+    .scan-ring .sweep2 {
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-bottom-color: rgba(0,227,140,.55);
+      animation: spin 1.7s linear infinite reverse;
+    }
+
+    .scan-ring .core {
+      position: absolute;
+      inset: 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,227,140,.25), rgba(0,227,140,.04) 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: corePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes corePulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.07); }
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Result ── */
-    #result {
+    .scan-status {
+      font-family: var(--font-disp);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.2px;
+      margin-bottom: 8px;
+    }
+
+    .scan-substatus {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+      transition: opacity .3s;
+    }
+
+    /* Result cards */
+    .result-grid {
       display: none;
-      margin-top: 26px;
-      border: 1px solid rgba(0,168,104,.35);
-      background: linear-gradient(140deg, rgba(0,200,125,.10), rgba(0,168,104,.05));
-      border-radius: var(--radius);
-      padding: 22px 26px;
-      animation: rise .5s cubic-bezier(.22,1,.36,1) both;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      animation: pop .5s cubic-bezier(.22,1,.36,1) both;
     }
 
-    #result .result-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--green-dark);
+    .result-cell {
+      border: 1px solid rgba(0,227,140,.22);
+      background: linear-gradient(160deg, rgba(0,227,140,.09), rgba(0,227,140,.03));
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+
+    .result-cell.wide { grid-column: 1 / -1; }
+
+    .result-cell small {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--emerald);
+      margin-bottom: 7px;
     }
 
-    #result .result-title .check {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--green-bright), var(--green-dark));
+    .result-cell b {
+      font-family: var(--font-disp);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .result-cell p { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+
+    /* ═══ Nav buttons ═══ */
+    .panel-nav {
       display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 700;
+      letter-spacing: -.1px;
+      border-radius: 14px;
+      padding: 15px 26px;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 3px 10px rgba(0,168,104,.4);
-    }
-
-    #result .result-body {
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.65;
-      font-weight: 500;
-    }
-
-    /* ── Divider ── */
-    .divider {
+      gap: 9px;
+      transition: all .2s;
       border: none;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
-      margin: 30px 0;
     }
 
-    /* ── Footer ── */
-    footer {
+    .btn-primary {
+      flex: 1;
       position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 22px;
-      font-size: 12.5px;
-      color: var(--faint);
-      font-weight: 500;
-      border-top: 1px solid rgba(4,61,43,.07);
-      background: rgba(255,255,255,.6);
-      backdrop-filter: blur(10px);
+      overflow: hidden;
+      color: #04120C;
+      background: linear-gradient(135deg, var(--emerald), var(--green));
+      box-shadow: 0 10px 28px -8px rgba(0,227,140,.5), inset 0 1px 0 rgba(255,255,255,.35);
     }
 
-    footer strong { color: var(--muted); font-weight: 700; }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -80%;
+      width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
+      transform: skewX(-20deg);
+      transition: left .55s ease;
+    }
 
-    @media (max-width: 480px) {
-      .steps .step span.step-label { display: none; }
-      main { padding: 28px 16px 56px; }
+    .btn-primary:hover:not(:disabled)::after { left: 135%; }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 34px -8px rgba(0,227,140,.6), inset 0 1px 0 rgba(255,255,255,.35);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: scale(.985); }
+
+    .btn-primary:disabled {
+      background: rgba(255,255,255,.07);
+      color: var(--faint);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.13);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      background: rgba(255,255,255,.09);
+    }
+
+    /* ═══ Responsive ═══ */
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+
+      aside {
+        flex-direction: row;
+        align-items: center;
+        padding: 18px 20px;
+        border-right: none;
+        border-bottom: 1px solid rgba(0,227,140,.10);
+        gap: 20px;
+      }
+
+      .brand { margin-bottom: 0; }
+      .brand-text small { display: none; }
+
+      .rail {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex: 1;
+        justify-content: flex-end;
+      }
+
+      .rail-item { padding-bottom: 0; padding-right: 26px; }
+      .rail-item:last-child { padding-right: 0; }
+      .rail-item::before, .rail-item .fill { display: none; }
+      .rail-info { display: none; }
+      .rail-dot { width: 32px; height: 32px; border-radius: 10px; font-size: 12px; }
+
+      .tip { display: none; }
+      .stage { min-height: calc(100vh - 81px); }
+      .review-grid { grid-template-columns: 1fr; }
+      .review-thumb { max-width: 220px; }
+      .result-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo-mark">
-      <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" fill="white" opacity=".92"/>
-        <path d="M10 5.5L14.5 8V13L10 15.5L5.5 13V8L10 5.5Z" fill="#00915A"/>
-      </svg>
-    </div>
-    <div class="logo-text">
-      <span>Stone</span>
-      <span>Cubage AI</span>
-    </div>
-    <span class="badge">Beta</span>
-  </header>
+  <!-- Background -->
+  <div class="aurora">
+    <div class="grid"></div>
+  </div>
 
-  <!-- Main -->
-  <main>
+  <div class="shell">
 
-    <div class="hero">
-      <div class="hero-tag">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3l1.9 5.8L20 10.7l-5.1 3.7 1.9 5.9-4.8-3.6-4.8 3.6 1.9-5.9L4 10.7l6.1-1.9z"/>
-        </svg>
-        Inteligência Artificial
-      </div>
-      <h1>Identificação de produto<br/>com <em>cubagem automática</em></h1>
-      <p>Envie uma foto e uma breve descrição. Nossa IA reconhece o produto e calcula a cubagem em segundos.</p>
-    </div>
-
-    <div class="card">
-
-      <!-- Steps -->
-      <div class="steps">
-        <div class="step active">
-          <div class="step-num">1</div>
-          <span class="step-label">Foto</span>
-        </div>
-        <div class="step-divider filled"></div>
-        <div class="step active">
-          <div class="step-num">2</div>
-          <span class="step-label">Descrição</span>
-        </div>
-        <div class="step-divider" id="divider-3"></div>
-        <div class="step" id="step-3">
-          <div class="step-num">3</div>
-          <span class="step-label">Resultado</span>
-        </div>
-      </div>
-
-      <form id="cubage-form" novalidate>
-
-        <!-- Upload -->
-        <div class="field">
-          <div class="field-label">
-            <label>Foto do produto <span>*</span></label>
-            <small>PNG, JPG ou WEBP · máx. 10 MB</small>
-          </div>
-
-          <div class="dropzone" id="dropzone">
-            <input type="file" id="file-input" accept="image/*" />
-            <div class="dropzone-icon">
-              <svg width="26" height="26" fill="none" stroke="#00A868" stroke-width="1.7" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 16V4"/>
-                <path d="M7 9l5-5 5 5"/>
-                <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
-              </svg>
-            </div>
-            <p><strong>Clique para selecionar</strong> ou arraste a imagem aqui</p>
-            <small>Solte o arquivo nesta área</small>
-          </div>
-
-          <div id="preview-wrap">
-            <img id="preview-img" src="" alt="Preview do produto" />
-            <div class="preview-meta">
-              <span class="dot"></span>
-              <span id="file-name">imagem.jpg</span>
-            </div>
-            <button type="button" class="remove-btn" id="remove-btn">✕ Remover</button>
-          </div>
-        </div>
-
-        <hr class="divider" />
-
-        <!-- Description -->
-        <div class="field">
-          <div class="field-label">
-            <label>Descrição do produto <span>*</span></label>
-            <small><span id="char-num">0</span> / 500</small>
-          </div>
-          <textarea
-            id="description"
-            placeholder="Ex: Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada..."
-            maxlength="500"
-          ></textarea>
-        </div>
-
-        <!-- Submit -->
-        <button type="submit" class="submit-btn" id="submit-btn" disabled>
-          <div class="spinner" id="spinner"></div>
-          <svg id="btn-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14"/>
-            <path d="M13 5l7 7-7 7"/>
+    <!-- ═══ Sidebar ═══ -->
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" fill="#04120C" opacity=".85"/>
+            <path d="M10 5.5L14.5 8V13L10 15.5L5.5 13V8L10 5.5Z" fill="#00E38C"/>
           </svg>
-          <span id="btn-label">Analisar produto</span>
-        </button>
-
-      </form>
-
-      <!-- Result -->
-      <div id="result">
-        <div class="result-title">
-          <span class="check">
-            <svg width="12" height="12" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-          </span>
-          Resultado da análise
         </div>
-        <div class="result-body" id="result-body">—</div>
+        <div class="brand-text">
+          <b>Stone</b>
+          <small>Cubage AI</small>
+        </div>
       </div>
 
-    </div>
-  </main>
+      <div class="rail" id="rail">
+        <div class="rail-item active" data-rail="0">
+          <span class="fill"></span>
+          <div class="rail-dot">1</div>
+          <div class="rail-info">
+            <b>Foto do produto</b>
+            <small>Envie uma imagem nítida do item</small>
+          </div>
+        </div>
+        <div class="rail-item" data-rail="1">
+          <span class="fill"></span>
+          <div class="rail-dot">2</div>
+          <div class="rail-info">
+            <b>Descrição</b>
+            <small>Conte o que sabe sobre o produto</small>
+          </div>
+        </div>
+        <div class="rail-item" data-rail="2">
+          <span class="fill"></span>
+          <div class="rail-dot">3</div>
+          <div class="rail-info">
+            <b>Revisão</b>
+            <small>Confirme as informações enviadas</small>
+          </div>
+        </div>
+        <div class="rail-item" data-rail="3">
+          <span class="fill"></span>
+          <div class="rail-dot">4</div>
+          <div class="rail-info">
+            <b>Análise da IA</b>
+            <small>Identificação e cálculo de cubagem</small>
+          </div>
+        </div>
+      </div>
 
-  <!-- Footer -->
-  <footer>
-    &copy; 2025 <strong>Stone Pagamentos S.A.</strong> · Cubage AI — Todos os direitos reservados
-  </footer>
+      <div class="tip">
+        <b>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.5 1 2.5h6c0-1 .3-1.9 1-2.5A6 6 0 0 0 12 3z"/>
+          </svg>
+          Dica
+        </b>
+        <p>Fotos com boa iluminação e o produto centralizado aumentam a precisão da identificação.</p>
+      </div>
+    </aside>
+
+    <!-- ═══ Stage ═══ -->
+    <div class="stage">
+
+      <div class="stage-top">
+        <span class="crumb">Cubagem inteligente <em>/</em> <span id="crumb-step">Foto do produto</span></span>
+        <span class="status-pill">Sistema online</span>
+      </div>
+
+      <div class="panels">
+
+        <!-- Panel 1 · Upload -->
+        <section class="panel active" data-panel="0">
+          <div class="panel-card">
+            <div class="panel-head">
+              <span class="kicker">Etapa 1 de 4</span>
+              <h2>Envie a foto do produto</h2>
+              <p>A imagem será analisada pela IA para reconhecer o item e estimar suas dimensões.</p>
+            </div>
+
+            <div class="dropzone" id="dropzone">
+              <input type="file" id="file-input" accept="image/*" />
+              <div class="dz-icon">
+                <svg width="28" height="28" fill="none" stroke="#00E38C" stroke-width="1.7" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 16V4"/>
+                  <path d="M7 9l5-5 5 5"/>
+                  <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+                </svg>
+              </div>
+              <p><b>Clique para selecionar</b> ou arraste a imagem aqui</p>
+              <div class="formats">
+                <span>PNG</span><span>JPG</span><span>WEBP</span><span>≤ 10 MB</span>
+              </div>
+            </div>
+
+            <div id="preview-wrap">
+              <img id="preview-img" src="" alt="Preview do produto" />
+              <div class="preview-meta">
+                <span class="dot"></span>
+                <span id="file-name">imagem.jpg</span>
+              </div>
+              <button type="button" class="remove-btn" id="remove-btn">✕ Trocar imagem</button>
+            </div>
+
+            <div class="panel-nav">
+              <button class="btn btn-primary" id="next-1" disabled>
+                Continuar
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 2 · Description -->
+        <section class="panel" data-panel="1">
+          <div class="panel-card">
+            <div class="panel-head">
+              <span class="kicker">Etapa 2 de 4</span>
+              <h2>Descreva o produto</h2>
+              <p>Quanto mais detalhes você fornecer, mais precisa será a identificação da IA.</p>
+            </div>
+
+            <textarea
+              id="description"
+              placeholder="Ex: Caixa de papelão com notebook Dell, modelo Inspiron 15, embalagem original lacrada..."
+              maxlength="500"
+            ></textarea>
+            <div class="char-row">
+              <span>Campo obrigatório</span>
+              <span><span id="char-num">0</span> / 500</span>
+            </div>
+
+            <div class="chips">
+              <span class="chips-label">Sugestões rápidas</span>
+              <button type="button" class="chip">Eletrônico</button>
+              <button type="button" class="chip">Embalagem lacrada</button>
+              <button type="button" class="chip">Produto frágil</button>
+              <button type="button" class="chip">Caixa de papelão</button>
+              <button type="button" class="chip">Item de grande porte</button>
+            </div>
+
+            <div class="panel-nav">
+              <button class="btn btn-ghost" id="back-2">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 12H5M11 19l-7-7 7-7"/>
+                </svg>
+                Voltar
+              </button>
+              <button class="btn btn-primary" id="next-2" disabled>
+                Continuar
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 3 · Review -->
+        <section class="panel" data-panel="2">
+          <div class="panel-card">
+            <div class="panel-head">
+              <span class="kicker">Etapa 3 de 4</span>
+              <h2>Revise as informações</h2>
+              <p>Confira os dados antes de enviar para a análise da IA.</p>
+            </div>
+
+            <div class="review-grid">
+              <div class="review-thumb">
+                <img id="review-img" src="" alt="" style="display:none" />
+                <span class="empty" id="review-img-empty">Sem imagem</span>
+              </div>
+              <div>
+                <div class="review-box">
+                  <b>Descrição fornecida</b>
+                  <p id="review-text">—</p>
+                </div>
+                <button type="button" class="review-edit" id="edit-desc">✎ Editar descrição</button>
+              </div>
+            </div>
+
+            <div class="panel-nav">
+              <button class="btn btn-ghost" id="back-3">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 12H5M11 19l-7-7 7-7"/>
+                </svg>
+                Voltar
+              </button>
+              <button class="btn btn-primary" id="analyze-btn">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l1.9 5.8L20 10.7l-5.1 3.7 1.9 5.9-4.8-3.6-4.8 3.6 1.9-5.9L4 10.7l6.1-1.9z"/>
+                </svg>
+                Iniciar análise
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 4 · Analysis + Result -->
+        <section class="panel" data-panel="3">
+          <div class="panel-card">
+            <div class="panel-head">
+              <span class="kicker">Etapa 4 de 4</span>
+              <h2 id="analysis-title">Analisando produto</h2>
+              <p id="analysis-sub">Nossa IA está processando a imagem e a descrição enviadas.</p>
+            </div>
+
+            <!-- Scanner -->
+            <div class="scanner" id="scanner">
+              <div class="scan-ring">
+                <div class="orbit"></div>
+                <div class="sweep"></div>
+                <div class="sweep2"></div>
+                <div class="core">
+                  <svg width="30" height="30" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="#00E38C" stroke-width="1.2" fill="none"/>
+                    <path d="M10 5.5L14.5 8V13L10 15.5L5.5 13V8L10 5.5Z" fill="#00E38C" opacity=".8"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="scan-status" id="scan-status">Processando imagem...</div>
+              <div class="scan-substatus" id="scan-substatus">Extraindo características visuais</div>
+            </div>
+
+            <!-- Result -->
+            <div class="result-grid" id="result-grid">
+              <div class="result-cell wide">
+                <small>Produto identificado</small>
+                <b id="res-product">—</b>
+                <p>Resultado retornado pelo sistema de identificação por IA.</p>
+              </div>
+              <div class="result-cell">
+                <small>Confiança</small>
+                <b id="res-confidence">—</b>
+              </div>
+              <div class="result-cell">
+                <small>Cubagem estimada</small>
+                <b id="res-cubage">—</b>
+              </div>
+            </div>
+
+            <div class="panel-nav" id="result-nav" style="display:none">
+              <button class="btn btn-ghost" id="restart-btn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+                  <path d="M3 3v5h5"/>
+                </svg>
+                Nova análise
+              </button>
+              <button class="btn btn-primary" id="export-btn">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 4v12M6 10l6 6 6-6"/>
+                  <path d="M4 20h16"/>
+                </svg>
+                Exportar resultado
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
 
   <script>
+    /* ── Floating particles ── */
+    const aurora = document.querySelector('.aurora');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.top = (60 + Math.random() * 45) + 'vh';
+      p.style.animationDuration = (9 + Math.random() * 14) + 's';
+      p.style.animationDelay = (Math.random() * 12) + 's';
+      p.style.width = p.style.height = (2 + Math.random() * 3.5) + 'px';
+      aurora.appendChild(p);
+    }
+
+    /* ── Elements ── */
+    const panels      = [...document.querySelectorAll('.panel')];
+    const railItems   = [...document.querySelectorAll('.rail-item')];
+    const crumbStep   = document.getElementById('crumb-step');
+    const crumbNames  = ['Foto do produto', 'Descrição', 'Revisão', 'Análise da IA'];
+
     const dropzone    = document.getElementById('dropzone');
     const fileInput   = document.getElementById('file-input');
     const previewWrap = document.getElementById('preview-wrap');
     const previewImg  = document.getElementById('preview-img');
     const fileName    = document.getElementById('file-name');
     const removeBtn   = document.getElementById('remove-btn');
+
     const description = document.getElementById('description');
     const charNum     = document.getElementById('char-num');
-    const form        = document.getElementById('cubage-form');
-    const submitBtn   = document.getElementById('submit-btn');
-    const spinner     = document.getElementById('spinner');
-    const btnIcon     = document.getElementById('btn-icon');
-    const btnLabel    = document.getElementById('btn-label');
-    const result      = document.getElementById('result');
-    const resultBody  = document.getElementById('result-body');
-    const step3       = document.getElementById('step-3');
-    const divider3    = document.getElementById('divider-3');
+    const chips       = [...document.querySelectorAll('.chip')];
+
+    const reviewImg      = document.getElementById('review-img');
+    const reviewImgEmpty = document.getElementById('review-img-empty');
+    const reviewText     = document.getElementById('review-text');
+
+    const scanner       = document.getElementById('scanner');
+    const scanStatus    = document.getElementById('scan-status');
+    const scanSubstatus = document.getElementById('scan-substatus');
+    const resultGrid    = document.getElementById('result-grid');
+    const resultNav     = document.getElementById('result-nav');
+    const analysisTitle = document.getElementById('analysis-title');
+    const analysisSub   = document.getElementById('analysis-sub');
 
     let hasFile = false;
+    let current = 0;
 
-    // Spotlight follows the cursor inside the dropzone
-    dropzone.addEventListener('mousemove', e => {
-      const r = dropzone.getBoundingClientRect();
-      dropzone.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      dropzone.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    });
+    /* ── Step navigation ── */
+    function goTo(step) {
+      panels[current].classList.remove('active');
+      panels[current].classList.toggle('exit-left', step > current);
+      panels[step].classList.remove('exit-left');
+      panels[step].classList.add('active');
 
-    function updateSubmit() {
-      const hasText = description.value.trim().length > 0;
-      submitBtn.disabled = !(hasFile && hasText);
+      railItems.forEach((item, i) => {
+        item.classList.toggle('active', i === step);
+        item.classList.toggle('done', i < step);
+      });
+
+      crumbStep.textContent = crumbNames[step];
+      current = step;
     }
 
+    /* ── Upload ── */
     function showPreview(file) {
       const reader = new FileReader();
       reader.onload = e => {
         previewImg.src = e.target.result;
+        reviewImg.src = e.target.result;
         fileName.textContent = file.name;
         previewWrap.style.display = 'block';
         dropzone.style.display = 'none';
         hasFile = true;
-        updateSubmit();
+        document.getElementById('next-1').disabled = false;
       };
       reader.readAsDataURL(file);
     }
@@ -790,22 +1247,16 @@
 
     removeBtn.addEventListener('click', () => {
       previewImg.src = '';
+      reviewImg.src = '';
       previewWrap.style.display = 'none';
       dropzone.style.display = 'block';
       fileInput.value = '';
       hasFile = false;
-      updateSubmit();
+      document.getElementById('next-1').disabled = true;
     });
 
-    dropzone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropzone.classList.add('drag-over');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('drag-over');
-    });
-
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
     dropzone.addEventListener('drop', e => {
       e.preventDefault();
       dropzone.classList.remove('drag-over');
@@ -816,36 +1267,101 @@
       }
     });
 
+    /* ── Description ── */
     description.addEventListener('input', () => {
       charNum.textContent = description.value.length;
-      updateSubmit();
+      document.getElementById('next-2').disabled = description.value.trim().length === 0;
     });
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      if (submitBtn.disabled) return;
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const txt = chip.textContent.trim();
+        const sep = description.value.trim().length ? ', ' : '';
+        if (!description.value.includes(txt)) {
+          description.value = (description.value.trim() + sep + txt).slice(0, 500);
+          description.dispatchEvent(new Event('input'));
+        }
+      });
+    });
 
-      // Loading state
-      submitBtn.disabled = true;
-      spinner.style.display = 'block';
-      btnIcon.style.display = 'none';
-      btnLabel.textContent  = 'Analisando...';
-      result.style.display  = 'none';
+    /* ── Buttons ── */
+    document.getElementById('next-1').addEventListener('click', () => goTo(1));
+    document.getElementById('back-2').addEventListener('click', () => goTo(0));
+    document.getElementById('next-2').addEventListener('click', () => {
+      // fill review
+      if (hasFile) {
+        reviewImg.style.display = 'block';
+        reviewImgEmpty.style.display = 'none';
+      }
+      reviewText.textContent = description.value.trim() || '—';
+      goTo(2);
+    });
+    document.getElementById('back-3').addEventListener('click', () => goTo(1));
+    document.getElementById('edit-desc').addEventListener('click', () => goTo(1));
 
-      // Simulate backend call — replace with real fetch()
-      setTimeout(() => {
-        spinner.style.display = 'none';
-        btnIcon.style.display = 'block';
-        btnLabel.textContent  = 'Analisar produto';
-        submitBtn.disabled    = false;
+    /* ── Analysis (simulated — replace with real fetch to backend) ── */
+    const phases = [
+      ['Processando imagem...', 'Extraindo características visuais'],
+      ['Interpretando descrição...', 'Cruzando texto com base de produtos'],
+      ['Identificando produto...', 'Comparando padrões reconhecidos'],
+      ['Calculando cubagem...', 'Estimando dimensões e volume']
+    ];
 
-        step3.classList.add('active');
-        divider3.classList.add('filled');
+    document.getElementById('analyze-btn').addEventListener('click', () => {
+      goTo(3);
 
-        result.style.display = 'block';
-        resultBody.textContent = 'Produto identificado com sucesso. Os dados foram enviados para processamento de cubagem.';
-        result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 2200);
+      // reset state
+      scanner.style.display = 'flex';
+      resultGrid.style.display = 'none';
+      resultNav.style.display = 'none';
+      analysisTitle.textContent = 'Analisando produto';
+      analysisSub.textContent = 'Nossa IA está processando a imagem e a descrição enviadas.';
+
+      let phase = 0;
+      scanStatus.textContent = phases[0][0];
+      scanSubstatus.textContent = phases[0][1];
+
+      const interval = setInterval(() => {
+        phase++;
+        if (phase < phases.length) {
+          scanStatus.textContent = phases[phase][0];
+          scanSubstatus.textContent = phases[phase][1];
+        } else {
+          clearInterval(interval);
+          finishAnalysis();
+        }
+      }, 1400);
+    });
+
+    function finishAnalysis() {
+      scanner.style.display = 'none';
+      analysisTitle.textContent = 'Análise concluída';
+      analysisSub.textContent = 'Confira abaixo o resultado retornado pela IA.';
+
+      // Placeholder values — replace with backend response
+      document.getElementById('res-product').textContent    = 'Aguardando integração com o backend';
+      document.getElementById('res-confidence').textContent = '—';
+      document.getElementById('res-cubage').textContent     = '—';
+
+      resultGrid.style.display = 'grid';
+      resultNav.style.display = 'flex';
+
+      railItems[3].classList.add('done');
+    }
+
+    /* ── Restart ── */
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      removeBtn.click();
+      description.value = '';
+      description.dispatchEvent(new Event('input'));
+      reviewImg.style.display = 'none';
+      reviewImgEmpty.style.display = 'block';
+      railItems.forEach(i => i.classList.remove('done'));
+      goTo(0);
+    });
+
+    document.getElementById('export-btn').addEventListener('click', () => {
+      alert('Exportação disponível após a integração com o backend.');
     });
   </script>
 
